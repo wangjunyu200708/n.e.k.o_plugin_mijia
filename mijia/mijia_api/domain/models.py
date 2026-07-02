@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class DeviceStatus(str, Enum):
@@ -87,6 +87,14 @@ class Home(BaseModel):
     uid: str = Field(description="用户ID")
     rooms: List[dict[str, Any]] = Field(default_factory=list, description="房间列表")
 
+    @field_validator("uid", mode="before")
+    @classmethod
+    def _uid_int_to_str(cls, v: Any) -> str:
+        """自动将 int 类型的 uid 转换为 str"""
+        if isinstance(v, int):
+            return str(v)
+        return v
+
 
 class Device(BaseModel):
     """设备实体"""
@@ -119,6 +127,7 @@ class DeviceProperty(BaseModel):
     value_range: Optional[List[Any]] = Field(default=None, description="值范围")
     value_list: Optional[List[Any]] = Field(default=None, description="枚举值列表")
     unit: Optional[str] = Field(default=None, description="单位")
+    service_description: Optional[str] = Field(default=None, description="服务描述")
 
     def is_readable(self) -> bool:
         """是否可读"""
