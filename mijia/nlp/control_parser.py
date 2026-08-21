@@ -69,14 +69,17 @@ def parse_control_command(command: str) -> Optional[ParseResult]:
         return None
 
     # === 开关命令：动词在最前面，直接切 ===
-    for kw in ["打开", "开启", "开"]:
-        if cmd.startswith(kw):
-            device = cmd[len(kw):].strip()
-            return ParseResult(device=device, action="switch", value=True) if device else None
-    for kw in ["关闭", "关掉", "关"]:
-        if cmd.startswith(kw):
-            device = cmd[len(kw):].strip()
-            return ParseResult(device=device, action="switch", value=False) if device else None
+    # 动作动词开头的命令（如"开始扫地"）不算开关，否则"开"+"始扫地"会被误切；
+    # 与 router 的 ACTION_VERB_PREFIX_RE 保持一致
+    if not T.ACTION_VERB_PREFIX_RE.match(cmd):
+        for kw in ["打开", "开启", "开"]:
+            if cmd.startswith(kw):
+                device = cmd[len(kw):].strip()
+                return ParseResult(device=device, action="switch", value=True) if device else None
+        for kw in ["关闭", "关掉", "关"]:
+            if cmd.startswith(kw):
+                device = cmd[len(kw):].strip()
+                return ParseResult(device=device, action="switch", value=False) if device else None
 
     # === 属性/模式命令：找分界线 ===
     device_ref = None
@@ -88,13 +91,21 @@ def parse_control_command(command: str) -> Optional[ParseResult]:
         device_ref = cmd[:verb_m.start()].strip()
         intent = cmd[verb_m.start():]
 
-    # 1.5) 单字"调"分界（仅后跟数字或模式词时）：
+    # 1.5) 单字"调"分界（后跟数字/模式词/修饰词时）：
     #      "空调调26度" → "空调" | "调26度"，"空调调制冷" → "空调" | "调制冷"
+    #      排除"空调"里的"调"（负向后顾），否则"空调26度"会被误切成设备"空"；
+    #      若"调"之前已含属性/模式词（如"空调温度调高一点"里的"温度"），分界应
+    #      交给属性词，而不是把"温度"吞进设备名
     if not device_ref:
-        tiao_m = re.search(r"调(?=\d|(?:" + T.MODE_TERMS + r"))", cmd)
+        tiao_m = re.search(
+            r"(?<!空)调(?=\d|(?:" + T.MODE_TERMS + r")|(?:" + T.ADJUST_UP + r")|(?:" + T.ADJUST_DOWN + r"))",
+            cmd,
+        )
         if tiao_m:
-            device_ref = cmd[:tiao_m.start()].strip()
-            intent = cmd[tiao_m.start():]
+            prefix = cmd[:tiao_m.start()]
+            if not re.search(r"(?:" + T.PROP_TERMS + r"|" + T.MODE_TERMS + r")", prefix):
+                device_ref = prefix.strip()
+                intent = cmd[tiao_m.start():]
 
     # 2) 属性/模式词分界："灯亮度50%" → "灯" | "亮度50%"
     #    取第一个非偏移 0 的匹配：设备名以模式词开头时（如"烘干机温度50度"里的
@@ -122,8 +133,8 @@ def parse_control_command(command: str) -> Optional[ParseResult]:
 
     # === 解析意图 ===
 
-    # 模式命令："制冷" / "自动模式" / "调制冷"
-    mode_m = re.match(r"(?:(?:" + T.SPLIT_VERBS + r"))?\s*(" + T.MODE_TERMS + r")(?:模式)?$", intent)
+    # 模式命令："制冷" / "自动模式" / "调制冷" / "调到制冷"
+    mode_m = re.match(r"(?:(?:" + T.SPLIT_VERBS + r")|调)?\s*(" + T.MODE_TERMS + r")(?:模式)?$", intent)
     if mode_m:
         return ParseResult(device=device_ref, action="set_prop", prop="模式", value=mode_m.group(1))
 

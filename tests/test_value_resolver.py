@@ -1,7 +1,7 @@
 """value_resolver 数值抽取 / 相对量 / 钳值测试（含 control_parser 联动回归）。"""
 
-from plugin.plugins.mijia.nlp.control_parser import parse_control_command
-from plugin.plugins.mijia.nlp.value_resolver import (
+from nlp.control_parser import parse_control_command
+from nlp.value_resolver import (
     extract_number,
     infer_prop_from_unit,
     parse_delta,
@@ -135,3 +135,37 @@ def test_parse_mode_word_at_device_prefix():
     assert parsed.action == "set_prop"
     assert parsed.prop == "温度"
     assert parsed.value == 50
+
+
+def test_parse_ac_temperature_no_verb():
+    # "空调26度"：单字调分界不得命中"空调"里的"调"，否则切成设备"空"
+    parsed = parse_control_command("空调26度")
+    assert parsed is not None
+    assert parsed.device == "空调"
+    assert parsed.prop == "温度"
+    assert parsed.value == 26
+
+
+def test_parse_ac_bare_tiao_mode():
+    # "空调调制冷"：裸"调"前缀应命中模式分支，而非把"冷"当相对降档
+    parsed = parse_control_command("空调调制冷")
+    assert parsed is not None
+    assert parsed.device == "空调"
+    assert parsed.action == "set_prop"
+    assert parsed.prop == "模式"
+    assert parsed.value == "制冷"
+
+
+def test_parse_ac_bare_tiao_adjust():
+    # "空调调亮一点"：裸"调"+修饰词 → 相对调亮
+    parsed = parse_control_command("空调调亮一点")
+    assert parsed is not None
+    assert parsed.device == "空调"
+    assert parsed.action == "adjust_prop"
+    assert parsed.prop == "亮度"
+    assert parsed.direction == 1
+
+
+def test_parse_action_verb_prefix_not_switch():
+    # "开始扫地" 不应被切成开关 "开"+"始扫地"
+    assert parse_control_command("开始扫地") is None

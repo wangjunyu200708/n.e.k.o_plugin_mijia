@@ -3,7 +3,7 @@
 使用 mock devices_cache.json 内容：卧室灯 / 客厅空调 / 书房电视。
 """
 
-from plugin.plugins.mijia.nlp.router import route
+from nlp.router import route
 
 # 模拟 devices_cache.json 内容
 MOCK_DEVICES = [

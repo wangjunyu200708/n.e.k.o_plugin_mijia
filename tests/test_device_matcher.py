@@ -4,7 +4,7 @@ mock 设备含 power 属性位于 siid=1/piid=2（不在默认 2/1），
 确保匹配结果与属性位置无关。
 """
 
-from plugin.plugins.mijia.nlp.device_matcher import match_devices
+from nlp.device_matcher import match_devices
 
 MOCK_DEVICES = [
     {
