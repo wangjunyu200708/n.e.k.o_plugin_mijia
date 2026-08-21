@@ -5,10 +5,11 @@
 """
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Optional
 
 from . import intent_terms as T
+from .normalizer import normalize_utterance
 from .value_resolver import (
     CN_DIGIT_BOUNDARY_RE,
     infer_prop_from_unit,
@@ -23,6 +24,7 @@ class ParseResult:
 
     action: "switch"（二元开关）| "set_prop"（属性/模式设定）| "adjust_prop"（相对调整）
     direction/delta: 仅 adjust_prop 使用（1=增大，-1=减小）
+    unit: 数值携带的单位（度/档/% 等），供上层与诊断使用
     """
 
     device: str
@@ -31,6 +33,7 @@ class ParseResult:
     value: Any = None
     direction: int = 1
     delta: Optional[float] = None
+    unit: str = ""
 
     def __repr__(self) -> str:
         return (
@@ -62,7 +65,7 @@ def parse_control_command(command: str) -> Optional[ParseResult]:
     2. 开关命令：动词前缀直接切
     3. 属性/模式命令：四种分界线找"设备 | 意图"，再解析模式/数值/相对量/极值/颜色
     """
-    cmd = command.strip()
+    cmd = normalize_utterance(command)
 
     # 场景命令不在此处理
     if re.match(r"(?:执行|运行|触发)", cmd):
@@ -80,6 +83,14 @@ def parse_control_command(command: str) -> Optional[ParseResult]:
             if cmd.startswith(kw):
                 device = cmd[len(kw):].strip()
                 return ParseResult(device=device, action="switch", value=False) if device else None
+
+    # === 开关命令：动词在句末（"书房灯关掉" / "卧室电视关了" / "空调打开"） ===
+    trail = re.match(r"^(.+?)(关闭|关掉|关了|关上|打开|开启)$", cmd)
+    if trail:
+        device = trail.group(1).strip()
+        if device:
+            on = trail.group(2) in ("打开", "开启")
+            return ParseResult(device=device, action="switch", value=on)
 
     # === 属性/模式命令：找分界线 ===
     device_ref = None
@@ -131,6 +142,13 @@ def parse_control_command(command: str) -> Optional[ParseResult]:
     if not device_ref or not intent:
         return None
 
+    # 设备名尾部若带属性词（如"主卧空调风速"），剥离为独立属性，避免被吞进设备名
+    trailing_prop = None
+    tp_m = re.search(r"(" + T.PROP_TERMS + r")$", device_ref)
+    if tp_m:
+        trailing_prop = tp_m.group(1)
+        device_ref = device_ref[:tp_m.start()].strip()
+
     # === 解析意图 ===
 
     # 模式命令："制冷" / "自动模式" / "调制冷" / "调到制冷"
@@ -138,34 +156,47 @@ def parse_control_command(command: str) -> Optional[ParseResult]:
     if mode_m:
         return ParseResult(device=device_ref, action="set_prop", prop="模式", value=mode_m.group(1))
 
-    # 属性 + 数值："亮度50%" / "调到50%" / "调到26度" / "温度26" / "50%"
+    # 相对值调整（先于"属性+数值"，"调高/调低 X"是相对而非绝对）：
+    #   形态A："调低两度"/"温度调高5度" —— 调/设/切 + 修饰词
+    #   形态B："温度高一点"/"高一点" —— 修饰词 + 量词
+    adj_prop = None
+    direction_word = None
+    m = re.search(
+        r"(?:" + T.PROP_TERMS + r")?\s*(?:调|设|切)\s*(" + T.ADJUST_UP + r"|" + T.ADJUST_DOWN + r")",
+        intent,
+    )
+    if m:
+        pm = re.search(r"(" + T.PROP_TERMS + r")", intent[:m.start()])
+        adj_prop = pm.group(1) if pm else None
+        direction_word = m.group(1)
+    else:
+        m2 = re.search(
+            r"(" + T.PROP_TERMS + r")?\s*(" + T.ADJUST_UP + r"|" + T.ADJUST_DOWN + r")"
+            r"(?:一?点|一些|一?些|少许)",
+            intent,
+        )
+        if m2:
+            adj_prop = m2.group(1)
+            direction_word = m2.group(2)
+    if direction_word:
+        direction = 1 if re.match(T.ADJUST_UP, direction_word) else -1
+        if not adj_prop:
+            adj_prop = trailing_prop or _infer_prop_from_intent(intent)
+        delta = parse_delta(intent)
+        return ParseResult(
+            device=device_ref, action="adjust_prop",
+            prop=adj_prop, direction=direction, delta=delta,
+        )
+
+    # 属性 + 数值："亮度50%" / "调到50%" / "调到26度" / "温度26" / "50%" / "调到2档"
     prop_val = parse_prop_value(intent)
     if prop_val is not None:
         prop_name, value, unit = prop_val
         if not prop_name:
-            prop_name = infer_prop_from_unit(unit, value)
+            prop_name = trailing_prop or infer_prop_from_unit(unit, value)
             if prop_name is None:
                 return None
-        return ParseResult(device=device_ref, action="set_prop", prop=prop_name, value=value)
-
-    # 相对值调整："调亮一点" / "温度高一点" / "风速调大一点"
-    adj_m = re.search(
-        r"(" + T.PROP_TERMS + r")?\s*(?:调|设|切)?\s*"
-        r"(" + T.ADJUST_UP + r"|" + T.ADJUST_DOWN + r")"
-        r"(?:一?点|一些|一?些|一?些|少许)?",
-        intent,
-    )
-    if adj_m:
-        prop_name = adj_m.group(1)
-        direction_word = adj_m.group(2)
-        direction = 1 if re.match(T.ADJUST_UP, direction_word) else -1
-        if not prop_name:
-            prop_name = _infer_prop_from_intent(intent)
-        delta = parse_delta(intent)
-        return ParseResult(
-            device=device_ref, action="adjust_prop",
-            prop=prop_name, direction=direction, delta=delta,
-        )
+        return ParseResult(device=device_ref, action="set_prop", prop=prop_name, value=value, unit=unit)
 
     # 极值："调到最高" / "调到最低" / "最亮" / "最暗"
     ext_m = re.search(

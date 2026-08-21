@@ -11,6 +11,7 @@ from typing import Any, Optional
 from .action_verbs import match_action_verb
 from .control_parser import ParseResult, parse_control_command
 from .device_matcher import MatchResult, match_devices
+from .normalizer import normalize_utterance
 from . import intent_terms as T
 
 
@@ -33,6 +34,7 @@ class RouteResult:
     match: Optional[MatchResult] = None
     parsed: Optional[ParseResult] = None
     message: str = ""
+    raw_text: str = ""
 
     def __repr__(self) -> str:
         return f"RouteResult(branch={self.branch!r}, device_hint={self.device_hint!r})"
@@ -52,12 +54,13 @@ async def route(
         devices: 设备缓存列表（用于动作/控制分支的设备匹配）。
         api_room_map / device_room_map: gethome_merged 房间映射降级（可选）。
     """
-    command = utterance.strip() if isinstance(utterance, str) else ""
+    command = normalize_utterance(utterance if isinstance(utterance, str) else "")
+    raw_text = utterance if isinstance(utterance, str) else ""
 
-    # === 场景执行 ===
-    scene_m = T.SCENE_RE.match(command)
-    if scene_m:
-        return RouteResult(branch="scene", scene_name=scene_m.group(1).strip())
+    # === 场景执行（含口语别名与"打开XX模式"） ===
+    scene_name = T.detect_scene(command)
+    if scene_name:
+        return RouteResult(branch="scene", scene_name=scene_name, raw_text=raw_text)
 
     # === 开关指令标记（最高优先级，防止动作动词分支抢先匹配） ===
     is_switch_cmd = bool(T.SWITCH_CMD_RE.match(command)) and not T.ACTION_VERB_PREFIX_RE.match(command)
@@ -70,7 +73,7 @@ async def route(
         # 去掉属性名后缀（温度/湿度/亮度/电量等），保留设备名
         device_hint = T.QUERY_PROP_SUFFIX_RE.sub("", device_hint).strip()
         if device_hint:
-            return RouteResult(branch="query", device_hint=device_hint)
+            return RouteResult(branch="query", device_hint=device_hint, raw_text=raw_text)
 
     # === 设备操作（开始/暂停/停止/回充等），开关指令跳过 ===
     if not is_switch_cmd:
@@ -84,14 +87,14 @@ async def route(
             # 避免设备名以动作动词开头时（如"烘干机温度50度"→误拆"烘干"+"机温度50度"）
             # 被动作分支抢先导致设备识别失败
             if match.status == "ok" and len(match.devices) == 1:
-                return RouteResult(branch="action", device_hint=device_hint, verb=verb, match=match)
+                return RouteResult(branch="action", device_hint=device_hint, verb=verb, match=match, raw_text=raw_text)
 
     # === 属性/模式控制 ===
     parsed = parse_control_command(command)
     if parsed is None:
-        return RouteResult(branch="unknown")
+        return RouteResult(branch="unknown", raw_text=raw_text)
     branch = "switch" if parsed.action == "switch" else "control"
     match = match_devices(
         parsed.device, devices, api_room_map=api_room_map, device_room_map=device_room_map
     )
-    return RouteResult(branch=branch, device_hint=parsed.device, parsed=parsed, match=match)
+    return RouteResult(branch=branch, device_hint=parsed.device, parsed=parsed, match=match, raw_text=raw_text)

@@ -84,13 +84,24 @@ def test_relative_adjust_parsed():
     assert parsed.delta is None
 
 
-def test_number_precedes_adjust_original_behavior():
-    # 回归：原逻辑中 val_m 先于 adj_m，带数字的"调高5度"会被解析为 set_prop 温度=5
+def test_relative_adjust_with_explicit_delta():
+    # "空调温度调高5度" 是相对调整（升高 5 度），而非绝对设定为 5
     parsed = parse_control_command("空调温度调高5度")
     assert parsed is not None
-    assert parsed.action == "set_prop"
+    assert parsed.action == "adjust_prop"
     assert parsed.prop == "温度"
-    assert parsed.value == 5
+    assert parsed.direction == 1
+    assert parsed.delta == 5.0
+
+
+def test_relative_decrease_chinese_numeral():
+    # "空调调低两度" → 相对降低 2 度（中文数字"两"→2）
+    parsed = parse_control_command("空调调低两度")
+    assert parsed is not None
+    assert parsed.action == "adjust_prop"
+    assert parsed.prop == "温度"
+    assert parsed.direction == -1
+    assert parsed.delta == 2.0
 
 
 def test_resolve_adjust_target_default_step():

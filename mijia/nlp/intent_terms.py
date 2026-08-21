@@ -5,10 +5,42 @@
 """
 
 import re
+from typing import Optional
 
 # ── 场景执行动词 ──
 SCENE_VERBS = r"执行|运行|触发"
 SCENE_RE = re.compile(r"(?:执行|运行|触发)\s*(.+)")
+# 打开/开启/启动 ... 模式/场景 → 场景（"打开回家模式" 不是开关"回家模式"的设备）
+SCENE_MODE_RE = re.compile(r"(?:打开|开启|启动|运行)\s*(.+?)(?:模式|场景)\s*$")
+# 裸场景口语别名 → 场景关键词（用于按名称匹配场景）
+SCENE_PHRASE_MAP = {
+    "我回家了": "回家",
+    "我到家了": "回家",
+    "我回来了": "回家",
+    "到家了": "回家",
+    "晚安": "睡眠",
+    "睡觉了": "睡眠",
+    "我要睡了": "睡眠",
+    "睡了": "睡眠",
+}
+
+
+def detect_scene(command: str) -> Optional[str]:
+    """识别场景意图，返回场景关键词（用于按名称匹配场景）；非场景返回 None。
+
+    覆盖三种形态：
+    1. 执行/运行/触发 X → X
+    2. 打开/开启/启动 X模式 → X
+    3. 裸口语别名（我回家了/晚安等）→ 场景关键词
+    """
+    cmd = (command or "").strip()
+    m = SCENE_RE.match(cmd)
+    if m:
+        return m.group(1).strip()
+    m = SCENE_MODE_RE.match(cmd)
+    if m:
+        return m.group(1).strip()
+    return SCENE_PHRASE_MAP.get(cmd)
 
 # ── 开关指令（前缀动词）──
 SWITCH_VERBS = r"打开|开启|关闭|关掉|开|关"

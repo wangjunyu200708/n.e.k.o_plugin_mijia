@@ -42,9 +42,10 @@ from .mijia_api.domain.models import Credential
 from .mijia_api.domain.exceptions import TokenExpiredError, DeviceNotFoundError, DeviceOfflineError, MijiaAPIException
 
 # 导入 NLP 规则引擎（纯函数，见 nlp/ 子包）
-from .nlp import MatchResult, RouteResult, match_devices, route
+from .nlp import MatchResult, RouteResult, match_devices, route, validate_command
 from .nlp.action_verbs import VERB_TO_ACTION
-from .nlp.intent_terms import SCENE_RE
+from .nlp.normalizer import normalize_utterance
+from .nlp.intent_terms import detect_scene
 from .nlp.value_resolver import resolve_adjust_target
 
 _EMBEDDED_BY_AGENT = os.getenv("NEKO_PLUGIN_HOSTED_BY_AGENT", "").strip().lower() == "true"
@@ -1072,14 +1073,16 @@ class MijiaPlugin(NekoPluginBase):
         # 原始指令属会话文本，按仓库规范用 print 而非 logger
         print(f"[smart_control] 指令: {command}", flush=True)
 
-        # 场景命令与设备无关，先短路：避免加载设备缓存（缓存缺失时会触发网络刷新）
-        scene_m = SCENE_RE.match(command.strip())
-        if scene_m:
-            return await self._execute_scene_by_name(scene_m.group(1).strip())
+        # 归一化（剥"把/请/帮我"前缀）+ 场景短路：场景命令与设备无关，
+        # 先短路避免加载设备缓存（缓存缺失时会触发网络刷新）
+        norm = normalize_utterance(command)
+        scene_name = detect_scene(norm)
+        if scene_name:
+            return await self._execute_scene_by_name(scene_name)
 
         # 意图路由（nlp/ 纯规则引擎）：开关/查询/动作/属性分支短路
         devices = await self._load_devices_cache()
-        result = await route(command, devices)
+        result = await route(norm, devices)
         # 房间映射惰性获取：仅当匹配确实需要（not_found/ambiguous 且存在缺
         # room_name 的设备——可能是目标设备）时才调 get_homes，避免精确匹配拖慢
         if (
@@ -1387,6 +1390,12 @@ class MijiaPlugin(NekoPluginBase):
         if not prop:
             available = [p.get("name") for p in props if p.get("access") in ["write", "read_write", "notify_read_write"]]
             return Err(SdkError(f"'{display_name}'没有可控制的'{parsed.prop}'属性。可控制属性：{', '.join(available) if available else '无'}"))
+
+        # 能力校验：单位/范围与设备能力不兼容时（如 亮度 不接受 档），由能力层判
+        # INVALID_UNIT / INVALID_VALUE，而非 NLP 层替设备决定
+        cap_check = validate_command(prop, parsed.prop, parsed.value, parsed.unit)
+        if cap_check.status != "valid":
+            return Err(SdkError(cap_check.message))
 
         value = parsed.value
         # 极值处理："最高"/"最低" → 从 value_range 取边界
