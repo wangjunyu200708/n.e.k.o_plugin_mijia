@@ -1,3 +1,5 @@
+<p align="center"><img src="icon.png" width="160" alt="米家智能家居插件图标"></p>
+
 # 米家智能家居插件
 
 基于小米 MiOT 协议，通过 N.E.K.O AI 控制米家智能设备。
