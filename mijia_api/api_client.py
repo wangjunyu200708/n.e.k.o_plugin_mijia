@@ -6,12 +6,12 @@
 from typing import Any, Dict, List, Optional
 
 from .domain.models import Credential, Device, Home, Scene
-from .services.device_service import DeviceService
-from .services.scene_service import SceneService
-from .services.statistics_service import StatisticsService
 from .services.async_device_service import AsyncDeviceService
 from .services.async_scene_service import AsyncSceneService
 from .services.async_statistics_service import AsyncStatisticsService
+from .services.device_service import DeviceService
+from .services.scene_service import SceneService
+from .services.statistics_service import StatisticsService
 
 
 class _NoOpCache:
@@ -337,7 +337,7 @@ class MijiaAPI:
         Raises:
             MijiaAPIException: 网络或服务器错误（非规格不存在的情况）
         """
-        from .domain.exceptions import SpecNotFoundError, MijiaAPIException
+        from .domain.exceptions import MijiaAPIException, SpecNotFoundError
 
         try:
             return self._device_service.get_device_spec(model)
@@ -596,7 +596,7 @@ class AsyncMijiaAPI:
         if not model:
             return None
 
-        from .domain.exceptions import SpecNotFoundError, MijiaAPIException
+        from .domain.exceptions import MijiaAPIException, SpecNotFoundError
 
         try:
             return await self._device_service.get_device_spec(model)

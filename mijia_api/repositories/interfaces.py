@@ -4,7 +4,7 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Coroutine, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 

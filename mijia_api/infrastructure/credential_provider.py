@@ -3,13 +3,12 @@
 负责获取和刷新用户凭据。
 """
 
+import asyncio
 import time
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional
 
-import asyncio
 import httpx
 from qrcode.main import QRCode
 

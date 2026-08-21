@@ -13,11 +13,11 @@ import httpx
 from ..core.config import ConfigManager
 from ..core.logging import get_logger
 from ..domain.exceptions import (
-    MijiaConnectionError,
     DeviceNotFoundError,
     MijiaAPIException,
-    NetworkError,
+    MijiaConnectionError,
     MijiaTimeoutError,
+    NetworkError,
     TokenExpiredError,
     get_exception_by_code,
 )

@@ -9,12 +9,12 @@
 
 from ..domain.exceptions import (
     AuthenticationError,
-    MijiaConnectionError,
     DeviceError,
     DeviceNotFoundError,
     DeviceOfflineError,
     LoginFailedError,
     MijiaAPIException,
+    MijiaConnectionError,
     MijiaTimeoutError,
     NetworkError,
     PropertyReadOnlyError,

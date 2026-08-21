@@ -7,9 +7,9 @@ from nlp.capability import (
     to_command_ir,
     validate_command,
 )
-from nlp.router import RouteResult
-from nlp.device_matcher import MatchResult
 from nlp.control_parser import ParseResult
+from nlp.device_matcher import MatchResult
+from nlp.router import RouteResult
 
 # 模拟设备属性（名/类型/访问/范围/枚举）
 BRIGHTNESS_PROP = {"name": "Brightness", "type": "uint8", "access": "read_write", "value_range": [0, 100, 1]}

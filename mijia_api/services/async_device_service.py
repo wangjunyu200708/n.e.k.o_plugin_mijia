@@ -11,7 +11,7 @@ from ..domain.exceptions import (
     PropertyReadOnlyError,
     ValidationError,
 )
-from ..domain.models import Credential, Device, DeviceProperty
+from ..domain.models import Credential, Device
 from ..infrastructure.cache_manager import CacheManager
 from ..repositories.interfaces import IAsyncDeviceRepository, IDeviceSpecRepository
 

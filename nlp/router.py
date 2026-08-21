@@ -5,14 +5,14 @@
 由插件主类按 branch 分发执行。
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Optional
 
+from . import intent_terms as T
 from .action_verbs import match_action_verb
 from .control_parser import ParseResult, parse_control_command
 from .device_matcher import MatchResult, match_devices
 from .normalizer import normalize_utterance
-from . import intent_terms as T
 
 
 @dataclass

@@ -8,14 +8,37 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
+from config import USER_PLUGIN_BASE
+from plugin.sdk.plugin import (
+    Err,
+    NekoPluginBase,
+    Ok,
+    SdkError,
+    get_plugin_logger,
+    lifecycle,
+    neko_plugin,
+    plugin_entry,
+    timer_interval,
+    tr,
+    ui,
+)
 from utils.file_utils import atomic_write_json_async, read_json_async
 
-from plugin.sdk.plugin import (
-    NekoPluginBase, neko_plugin, plugin_entry, lifecycle, timer_interval,
-    ui, tr, Ok, Err, SdkError, get_plugin_logger
-)
+# 导入内嵌的 mijia_api
+from .mijia_api import create_async_api_client
+from .mijia_api.api_client import AsyncMijiaAPI
+from .mijia_api.domain.exceptions import MijiaAPIException, TokenExpiredError
+from .mijia_api.domain.models import Credential
+from .mijia_api.infrastructure.credential_provider import CredentialProvider
+from .mijia_api.infrastructure.credential_store import FileCredentialStore
+from .mijia_api.services.auth_service import AuthService
 
-from config import USER_PLUGIN_BASE
+# 导入 NLP 规则引擎（纯函数，见 nlp/ 子包）
+from .nlp import RouteResult, match_devices, route, validate_command
+from .nlp.action_verbs import VERB_TO_ACTION
+from .nlp.intent_terms import detect_scene
+from .nlp.normalizer import normalize_utterance
+from .nlp.value_resolver import resolve_adjust_target
 
 
 # ── 同步 helper（已禁用自动跳转，仅作备用）──────────────────────────────
@@ -30,23 +53,6 @@ def _open_url_in_browser(url: str) -> None:
             subprocess.Popen(["xdg-open", url])
     except Exception:
         raise
-
-
-# 导入内嵌的 mijia_api
-from .mijia_api import create_async_api_client
-from .mijia_api.api_client import AsyncMijiaAPI
-from .mijia_api.services.auth_service import AuthService
-from .mijia_api.infrastructure.credential_provider import CredentialProvider
-from .mijia_api.infrastructure.credential_store import FileCredentialStore
-from .mijia_api.domain.models import Credential
-from .mijia_api.domain.exceptions import TokenExpiredError, DeviceNotFoundError, DeviceOfflineError, MijiaAPIException
-
-# 导入 NLP 规则引擎（纯函数，见 nlp/ 子包）
-from .nlp import MatchResult, RouteResult, match_devices, route, validate_command
-from .nlp.action_verbs import VERB_TO_ACTION
-from .nlp.normalizer import normalize_utterance
-from .nlp.intent_terms import detect_scene
-from .nlp.value_resolver import resolve_adjust_target
 
 _EMBEDDED_BY_AGENT = os.getenv("NEKO_PLUGIN_HOSTED_BY_AGENT", "").strip().lower() == "true"
 
@@ -1860,7 +1866,6 @@ class MijiaPlugin(NekoPluginBase):
 
                 # ── 开关控制类（灯/插座/开关等共用） ──
                 "Switch Status": "开关状态",
-                "on": "开关",
                 "Power": "电源",
                 "On": "开启",
                 "Off": "关闭",

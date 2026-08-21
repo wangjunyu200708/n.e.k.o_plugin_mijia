@@ -3,7 +3,7 @@
 提供异步的设备统计功能。
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from ..domain.models import Credential, DeviceStatus
 from ..repositories.interfaces import IAsyncDeviceRepository

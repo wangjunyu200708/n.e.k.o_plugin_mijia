@@ -3,15 +3,13 @@
 从网络或缓存获取设备规格信息，并解析为标准化的设备规格模型。
 """
 
-import json
-import re
 from typing import Dict, List, Optional
 
 import httpx
 
 from ..core.logging import get_logger
 from ..domain.exceptions import MijiaAPIException, SpecNotFoundError
-from ..domain.models import DeviceAction, DeviceProperty, PropertyAccess, PropertyType, ActionParameter
+from ..domain.models import ActionParameter, DeviceAction, DeviceProperty, PropertyAccess, PropertyType
 from ..infrastructure.cache_manager import CacheManager
 from ..infrastructure.http_client import HttpClient
 from .interfaces import DeviceSpec, IDeviceSpecRepository
