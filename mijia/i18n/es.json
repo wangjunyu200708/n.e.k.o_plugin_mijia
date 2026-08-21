@@ -175,5 +175,10 @@
   "error.plugin_call_timeout": "Tiempo de espera agotado en la llamada al plugin",
   "error.empty_home_id": "❌ El ID del hogar está vacío, no se puede obtener la lista de dispositivos",
   "error.status_load_failed": "Falló la carga del estado: ",
-  "error.unknown": "Error desconocido"
+  "error.unknown": "Error desconocido",
+  "switch.action_rejected": "No se pudo ejecutar '{action}' en '{name}' (acción rechazada)",
+  "switch.no_response": "{action} '{name}' falló: el dispositivo no respondió al control de energía (puede no admitir el interruptor en la nube)",
+  "switch.unconfirmed": "Se envió el comando {action} a '{name}', pero no se pudo confirmar que surtiera efecto"
+
+
 }

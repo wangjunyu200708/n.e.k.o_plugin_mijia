@@ -242,6 +242,14 @@ class AsyncDeviceRepositoryImpl(IAsyncDeviceRepository):
             {"did": device_id, "siid": siid, "aiid": aiid, "in": params},
             credential,
         )
+        # 顶层 code=0 时 per-item code 可能非 0（如设备拒绝），需一并检查，
+        # 否则动作失败会被误报成功。/miotspec/action 的 result 是单个 dict
+        # （prop/set 才是 list），需分别处理。
+        result = response.get("result")
+        if isinstance(result, dict):
+            return result.get("code") == 0
+        if isinstance(result, list) and len(result) > 0 and isinstance(result[0], dict):
+            return result[0].get("code") == 0
         return response.get("code") == 0
 
     async def batch_get_properties(
