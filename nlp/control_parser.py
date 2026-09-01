@@ -66,6 +66,8 @@ def parse_control_command(command: str) -> Optional[ParseResult]:
     3. 属性/模式命令：四种分界线找"设备 | 意图"，再解析模式/数值/相对量/极值/颜色
     """
     cmd = normalize_utterance(command)
+    # 剥尾部询问/语气词（"关闭卧室灯怎么样"→"关闭卧室灯"），防污染设备名
+    cmd = T.QUERY_SUFFIX_RE.sub("", cmd).strip()
 
     # 场景命令不在此处理
     if re.match(r"(?:执行|运行|触发)", cmd):
