@@ -10,6 +10,7 @@
 
 import pytest
 
+# isort: split
 from nlp.router import route
 
 # 模拟 devices_cache.json 内容：14 台家庭智能家居设备，含房间/别名/属性/动作
