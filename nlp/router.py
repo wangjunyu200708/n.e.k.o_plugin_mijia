@@ -31,6 +31,7 @@ class RouteResult:
     device_hint: str = ""
     scene_name: str = ""
     verb: str = ""
+    query_prop: str = ""
     match: Optional[MatchResult] = None
     parsed: Optional[ParseResult] = None
     message: str = ""
@@ -70,10 +71,20 @@ async def route(
     if not is_switch_cmd and query_m:
         # 去掉查询关键词，提取设备名
         device_hint = command[:query_m.start()].strip()
-        # 去掉属性名后缀（温度/湿度/亮度/电量等），保留设备名
-        device_hint = T.QUERY_PROP_SUFFIX_RE.sub("", device_hint).strip()
+        # 去掉属性名后缀（温度/湿度/亮度/电量等），保留设备名；剥出的属性
+        # 词作为 query_prop，"卧室空调温度多少度" → device=卧室空调, prop=温度
+        prop_m = T.QUERY_PROP_SUFFIX_RE.search(device_hint)
+        query_prop = ""
+        if prop_m:
+            query_prop = prop_m.group(0)
+            device_hint = T.QUERY_PROP_SUFFIX_RE.sub("", device_hint).strip()
         if device_hint:
-            return RouteResult(branch="query", device_hint=device_hint, raw_text=raw_text)
+            return RouteResult(
+                branch="query",
+                device_hint=device_hint,
+                query_prop=query_prop or T.QUERY_KEYWORD_PROP_MAP.get(query_m.group(0), ""),
+                raw_text=raw_text,
+            )
 
     # === 设备操作（开始/暂停/停止/回充等），开关指令跳过 ===
     if not is_switch_cmd:
