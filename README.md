@@ -55,11 +55,20 @@
 用户：执行回家模式
 ```
 
+## 对话期工具（`@llm_tool`）
+
+| 工具名 | 说明 |
+|--------|------|
+| `smart_control` | **核心**：自然语言统一控制（开关/属性/模式/动作/场景）。由 AI 伙伴在对话中直接调用，参数 `{ "command": "打开卧室灯" }`。 |
+
+> 它不是 `@plugin_entry`：宿主会把 `__llm_tool__*` 动态入口从 analyzer 的入口列表里剥离，
+> 所以同一条指令不会被 analyzer 和对话 LLM 各执行一次；相应地也不能用 `/runs` +
+> `entry_id=smart_control` 触发（控制能力只在对话里用）。
+
 ## 入口（plugin_entry）
 
 | 入口 ID | 说明 |
 |---------|------|
-| `smart_control` | **核心**：自然语言统一控制（开关/属性/模式/动作/场景） |
 | `query_device_state` | 按名称查询设备所有可读属性 |
 | `list_devices` / `get_cached_devices` | 设备列表（带缓存 + user_id 归属校验） |
 | `list_homes` / `list_scenes` | 家庭列表 / 智能场景列表 |

@@ -244,12 +244,6 @@
             font-size: 0.75rem;
             color: #8e8e93;
         }
-        .btn-green {
-            background: #34c759;
-        }
-        .btn-green:hover {
-            background: #248a3d;
-        }
     </style>
 </head>
 <body>
@@ -284,32 +278,13 @@
             <button id="refreshStatusBtn" class="secondary" style="margin-top: 16px;" data-i18n="status.refresh">刷新状态</button>
         </div>
 
-        <!-- 场景列表区 -->
+        <!-- 场景列表区（只读：执行场景由对话里的 smart_control 工具完成） -->
         <div class="card" id="sceneCard">
             <div class="flex-between">
                 <h3 data-i18n="scene.title">🎬 智能场景</h3>
                 <button id="refreshScenesBtn" class="secondary" data-i18n="scene.refresh">刷新场景</button>
             </div>
             <div id="sceneList" class="scene-list"></div>
-        </div>
-
-        <!-- 智能控制区 -->
-        <div class="card" id="controlCard">
-            <h3 data-i18n="control.title">🎮 智能控制</h3>
-            <p class="info-text" data-i18n="control.hint">输入控制命令，支持以下格式：</p>
-            <ul class="info-text" style="margin: 8px 0 16px 20px; line-height: 1.8;">
-                <li><strong data-i18n="control.example_light_label">开灯/关灯</strong><span data-i18n="control.example_separator">：</span><code data-i18n="control.example_light_a">打开客厅灯</code><span data-i18n="control.example_or">、</span><code data-i18n="control.example_light_b">关闭卧室灯</code></li>
-                <li><strong data-i18n="control.example_ac_label">空调控制</strong><span data-i18n="control.example_separator">：</span><code data-i18n="control.example_ac_a">打开空调</code><span data-i18n="control.example_or">、</span><code data-i18n="control.example_ac_b">关闭空调</code></li>
-                <li><strong data-i18n="control.example_plug_label">插座控制</strong><span data-i18n="control.example_separator">：</span><code data-i18n="control.example_plug_a">打开插座</code><span data-i18n="control.example_or">、</span><code data-i18n="control.example_plug_b">关闭卧室插座</code></li>
-            </ul>
-            <div class="form-group">
-                <input type="text" id="controlInput" data-i18n-placeholder="control.placeholder" placeholder="输入控制命令，例如：打开客厅灯" />
-            </div>
-            <div class="btn-group">
-                <button id="controlBtn" data-i18n="control.send">发送命令</button>
-                <button id="clearControlBtn" class="secondary" data-i18n="control.clear">清空</button>
-            </div>
-            <div id="controlResult" style="margin-top: 12px; font-size: 0.85rem;"></div>
         </div>
     </div>
 </div>
@@ -545,35 +520,11 @@
                         <div class="scene-name">${escapeHtml(s.name || '')}</div>
                         <div class="scene-id">ID: ${escapeHtml(s.id || '')}</div>
                     </div>
-                    <button class="btn-green scene-exec-btn"
-                        data-scene-id="${escapeHtml(s.id || '')}"
-                        data-scene-name="${escapeHtml(s.name || '')}">${I18n.t('scene.execute', '执行')}</button>
                 </div>`;
             });
             sceneListEl.innerHTML = html;
-            // 事件委托，避免 onclick 字符串注入
-            sceneListEl.querySelectorAll('.scene-exec-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    executeScene(btn.dataset.sceneId, btn.dataset.sceneName);
-                });
-            });
         } catch (err) {
             sceneListEl.innerHTML = `<p class="info-text" style="color:#ff3b30">${I18n.t('scene.load_failed', '加载失败：')}${escapeHtml(err.message)}</p>`;
-        }
-    }
-
-    // 执行场景（通过 smart_control 入口，scene 执行已合并到统一控制）
-    async function executeScene(sceneId, sceneName) {
-        try {
-            showMessage(`${I18n.t('scene.executing_prefix', '正在执行「')}${sceneName}${I18n.t('scene.executing_suffix', '」...')}`, 'info');
-            const result = await callPlugin('smart_control', { command: `执行${sceneName}` });
-            if (result.success) {
-                showMessage(`${I18n.t('scene.executed_prefix', '✅「')}${sceneName}${I18n.t('scene.executed_suffix', '」执行成功！')}`, 'success');
-            } else {
-                showMessage(`${I18n.t('scene.failed_prefix', '❌「')}${sceneName}${I18n.t('scene.failed_suffix', '」执行失败：')}${result.message || I18n.t('error.unknown', '未知错误')}`, 'error');
-            }
-        } catch (err) {
-            showMessage(`${I18n.t('scene.exec_failed', '❌ 执行失败：')}${err.message}`, 'error');
         }
     }
 
@@ -591,43 +542,6 @@
         }
     }
 
-    // 智能控制：发送命令（调用 smart_control 入口，支持自然语言）
-    async function sendControlCommand() {
-        const input = document.getElementById('controlInput');
-        const command = input.value.trim();
-        if (!command) {
-            showMessage(I18n.t('control.empty_command', '请输入控制命令'), 'warning');
-            return;
-        }
-
-        const resultDiv = document.getElementById('controlResult');
-        resultDiv.style.color = '#6c6c70';
-        resultDiv.textContent = I18n.t('control.executing', '⏳ 命令执行中...');
-
-        try {
-            const result = await callPlugin('smart_control', { command: command });
-            if (result.success) {
-                resultDiv.style.color = '#34c759';
-                resultDiv.textContent = `✅ ${escapeHtml(result.message || I18n.t('control.executed_default', '命令已执行'))}`;
-                input.value = '';
-                // 3秒后刷新设备状态
-                setTimeout(() => loadStatus(true), 3000);
-            } else {
-                resultDiv.style.color = '#ff3b30';
-                resultDiv.textContent = `❌ ${escapeHtml(result.message || I18n.t('error.unknown', '未知错误'))}`;
-            }
-        } catch (err) {
-            resultDiv.style.color = '#ff3b30';
-            resultDiv.textContent = `❌ ${I18n.t('control.exec_error', '执行出错：')}${escapeHtml(err.message)}`;
-        }
-    }
-
-    // 清空控制输入
-    function clearControlInput() {
-        document.getElementById('controlInput').value = '';
-        document.getElementById('controlResult').textContent = '';
-    }
-
     // 页面初始化
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('qrLoginBtn').addEventListener('click', startQrLogin);
@@ -635,12 +549,6 @@
         document.getElementById('logoutBtn').addEventListener('click', logout);
         document.getElementById('refreshStatusBtn').addEventListener('click', () => loadStatus(true));
         document.getElementById('refreshScenesBtn').addEventListener('click', () => loadScenes(true));
-        document.getElementById('controlBtn').addEventListener('click', sendControlCommand);
-        document.getElementById('clearControlBtn').addEventListener('click', clearControlInput);
-        // 支持回车键发送（跳过输入法组合态，防止中文选词时误触发）
-        document.getElementById('controlInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.isComposing) sendControlCommand();
-        });
         // First loadStatus() must wait for the locale bundle: I18n._lang is
         // initialized to 'zh-CN' synchronously at script-load time, so the
         // old `I18n._lang` check passed before the async fetch finished and

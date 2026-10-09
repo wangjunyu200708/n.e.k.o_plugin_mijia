@@ -48,7 +48,7 @@ To avoid confusion, we recommend getting into the habit of using **`[room name] 
 
 If you need to call the plugin interface directly, here are the core entry points:
 
-- **`smart_control`** — Unified natural-language control (recommended)  
+- **`smart_control`** — Unified natural-language control (**conversation-time `@llm_tool`**: invoked automatically by the AI companion during dialogue; not a `@plugin_entry`, so it cannot be triggered via `/runs` + entry_id)  
   Params: `{ "command": "turn on the bedroom light" }`
 - **`list_devices`** — Get device list  
   Params: `{ "home_id": "12345" }`

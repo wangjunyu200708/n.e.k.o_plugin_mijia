@@ -48,7 +48,7 @@
 
 如果您需要直接呼叫插件介面，以下是核心入口說明：
 
-- **`smart_control`** — 自然語言統一控制 (推薦)  
+- **`smart_control`** — 自然語言統一控制（**對話期工具 `@llm_tool`**：由 AI 夥伴在對話中自動呼叫；不是 `@plugin_entry`，不能用 `/runs` + entry_id 觸發）  
   參數：`{ "command": "打開臥室燈" }`
 - **`list_devices`** — 取得裝置清單  
   參數：`{ "home_id": "12345" }`

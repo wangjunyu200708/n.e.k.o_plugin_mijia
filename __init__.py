@@ -16,6 +16,7 @@ from plugin.sdk.plugin import (
     SdkError,
     get_plugin_logger,
     lifecycle,
+    llm_tool,
     neko_plugin,
     plugin_entry,
     timer_interval,
@@ -34,11 +35,17 @@ from .mijia_api.infrastructure.credential_store import FileCredentialStore
 from .mijia_api.services.auth_service import AuthService
 
 # 导入 NLP 规则引擎（纯函数，见 nlp/ 子包）
-from .nlp import RouteResult, match_devices, route, validate_command
+from .nlp import CommandIR, match_devices, route, to_command_ir, validate_command
 from .nlp.action_verbs import VERB_TO_ACTION
 from .nlp.intent_terms import detect_scene
 from .nlp.normalizer import normalize_utterance
 from .nlp.value_resolver import resolve_adjust_target
+from .property_tables import (  # noqa: E402  静态表，见该模块 docstring
+    _POS_MAP,
+    NAME_MAP,
+    PROP_KEYWORDS,
+    UNIT_MAP,
+)
 
 
 # ── 同步 helper（已禁用自动跳转，仅作备用）──────────────────────────────
@@ -60,6 +67,88 @@ _EMBEDDED_BY_AGENT = os.getenv("NEKO_PLUGIN_HOSTED_BY_AGENT", "").strip().lower(
 # dict 列表（v2）。读缓存时校验版本，不匹配则视为失效重新拉取，避免旧缓存缺
 # 枚举描述导致中文模式命令失效。
 _DEVICES_CACHE_SCHEMA = 2
+
+# list_devices 并发拉取设备规格的并发上限。规格接口是公网 HTTP，8 路并发既能
+# 压掉串行等待，又不会因为一次刷新把连接数打满。
+_SPEC_FETCH_CONCURRENCY = 8
+
+# ── 对话期 LLM 工具（@llm_tool）──────────────────────────────────────────
+# 动作分发类能力走 @llm_tool（对话 LLM 直接调用），查询类留 @plugin_entry
+# （analyzer / 插件管理器 / 面板 /runs 路径），与 game_agent_minecraft 的
+# minecraft_task + 查询入口同一分工。
+#
+# 关键：同一能力**不能**两套都挂。宿主会把 analyzer 视野里的
+# __llm_tool__* 动态入口剥掉（app/agent_server/api_runtime.py:865-875），
+# 但 @plugin_entry 是 analyzer 看得见的——两者同时存在就会出现
+# "analyzer 触发入口 + 对话 LLM 调工具" 的双执行。
+#
+# description / parameters 必须是纯字符串（不能用 tr()）：tr() 返回的是
+# {"$i18n": key, "default": ...} 延迟引用 dict，只在入口元数据/UI 上下文里由
+# 宿主解析；@llm_tool 的描述经 IPC 直送 main_server 的 /api/tools/register，
+# 途中只有 str(description) 一次兜底转换（plugin/core/communication.py:1063），
+# 传 dict 会把整份引用对象拍成字符串喂给模型。
+SMART_CONTROL_DESCRIPTION = (
+    "用一句自然语言控制米家（小米）智能家居设备，或执行米家 App 里预设的智能场景。\n\n"
+    "何时调用——用户明确要求开关、调节某个设备，或执行某个场景时：\n"
+    "  开关：打开卧室灯 / 关掉插座\n"
+    "  亮度·色温·百分比：灯亮度调到 50% / 客厅灯亮度 30\n"
+    "  温度·模式：空调调到 26 度 / 空调调制冷\n"
+    "  场景：执行回家场景 / 离家模式\n"
+    "不要在闲聊、只是问某个设备现在什么状态、问你能做什么、或想确认上一条指令"
+    "到底生效没有时调用——这些都不是控制动作。\n\n"
+    "command 参数：\n"
+    "  ⚠️ 传用户的原话，不要改写、翻译，也不要自行补充设备名、房间名、数值或单位。\n"
+    "  必须是完整的一句话，不要传裸标识符（on / power / 100 这种）。\n"
+    "  ⚠️ 一次调用只传一条命令——本插件不解析多指令。用户一句话里含多个动作时，"
+    "为每个动作各调用一次本工具，不要把多个动作塞进同一个 command。\n\n"
+    "返回值：成功时 output 带 success 与 message（实际执行的设备与动作，"
+    "message 可直接转述给用户）；失败时 is_error=true 且 output.error 给出原因"
+    "（未登录 / 设备没匹配上 / 指令无法解析 / 凭据过期 / 动作被设备拒绝）。"
+    "⚠️ 失败就如实说明并追问要控制哪个设备，不要编造执行结果。"
+)
+
+SMART_CONTROL_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "command": {
+            "type": "string",
+            "description": (
+                "用户的自然语言控制指令原话，如'打开卧室灯'、'灯亮度调到50%'、"
+                "'空调26度'、'执行回家场景'"
+            ),
+        },
+    },
+    "required": ["command"],
+}
+
+
+def _tool_error(message: str, *, code: str) -> dict[str, Any]:
+    """构造 @llm_tool 的错误信封。
+
+    `error` 放稳定错误码（大写+下划线，供程序/日志判断），人类可读的中文原因放
+    output.error（模型拿去转述给用户）——两者别混用，见 references/24 错误码规范。
+    llm_tools.py 只在返回值带 is_error / output 时才走信封分支，缺了就会把整份
+    dict 当作 output 塞给模型。
+    """
+    return {"output": {"error": message}, "is_error": True, "error": code}
+
+
+def _tool_envelope(result: Any) -> dict[str, Any]:
+    """把内部 Result（Ok/Err）翻成 @llm_tool 的返回信封。
+
+    工具 handler 的返回值经 IPC 回到 user_plugin_server，再被
+    plugin/server/routes/llm_tools.py 包成 {"output": ..., "is_error": ...}
+    喂给对话 LLM。Err 直接返回会走 IPC 异常路径，把 PluginExecutionError
+    的报错串渗进模型上下文，所以这里显式降级成 is_error + 一句人类可读的原因。
+
+    ⚠️ 内部一切语义失败都必须走 Err——Ok 一律翻成 is_error=false，若某条分支用
+    Ok({"success": False}) 表示失败，模型会被告知"成功"。
+    """
+    if callable(getattr(result, "is_ok", None)):
+        if result.is_ok():
+            return {"output": result.value, "is_error": False}
+        return _tool_error(str(result.error), code="MIJIA_CONTROL_FAILED")
+    return {"output": result, "is_error": False}
 
 @neko_plugin
 class MijiaPlugin(NekoPluginBase):
@@ -251,8 +340,13 @@ class MijiaPlugin(NekoPluginBase):
 
     # ========== 设备匹配与命令解析 ==========
 
-    async def _load_devices_cache(self) -> list[dict]:
-        """加载设备缓存，不存在或版本不匹配时自动拉取"""
+    async def _load_devices_cache(self) -> tuple[list[dict], Optional[str]]:
+        """加载设备缓存，不存在或版本不匹配时自动拉取。
+
+        返回 ``(devices, failure)``。``failure`` 非空表示**拉取失败**（未登录 /
+        网络错 / 凭据过期），与「账号下确实没有设备」是两回事——调用方据此报真实
+        原因，而不是把刷新失败塌缩成空列表、再让上层报成「设备没匹配上」。
+        """
         cache_path = self.data_path("devices_cache.json")
         if self.api:
             try:
@@ -269,16 +363,17 @@ class MijiaPlugin(NekoPluginBase):
                     devices = cached.get('devices', [])
                     if devices:
                         self.logger.info(f"设备缓存有效: {len(devices)} 个设备")
-                        return devices
+                        return devices, None
                     self.logger.info("设备缓存为空，自动刷新")
         self.logger.info("从 API 刷新设备缓存")
         result = await self.list_devices(refresh=True)
         if result.is_ok():
             fresh_devices = result.value.get('devices', [])
             self.logger.info(f"API 刷新完成: {len(fresh_devices)} 个设备")
-            return fresh_devices
-        self.logger.info("API 刷新设备列表失败")
-        return []
+            return fresh_devices, None
+        failure = str(getattr(result, "error", "") or "设备列表刷新失败")
+        self.logger.info(f"API 刷新设备列表失败: {failure}")
+        return [], failure
 
     @plugin_entry(
         id="open_ui",
@@ -714,6 +809,36 @@ class MijiaPlugin(NekoPluginBase):
             room_filled = 0
             room_empty = 0
             spec_failed = False
+
+            # 规格预取：按 model 去重后并发拉取。原先在设备循环里串行 await，
+            # N 台设备就是 N 次排队 RTT，冷启动（首次调用触发全量刷新）时最明显。
+            # 仓储层本身按 model 有长缓存，这里省的是「首次 / 缓存失效」时的串行等待，
+            # 以及同型号设备的重复等待。
+            spec_map: dict[str, Any] = {}
+            spec_error_models: set[str] = set()
+            _unique_models = list(dict.fromkeys(d.model for d in devices if d.model))
+            if _unique_models:
+                _sem = asyncio.Semaphore(_SPEC_FETCH_CONCURRENCY)
+
+                async def _fetch_spec(model: str):
+                    async with _sem:
+                        return await self.api.get_device_spec(model)
+
+                _fetched = await asyncio.gather(
+                    *(_fetch_spec(m) for m in _unique_models),
+                    return_exceptions=True,
+                )
+                for _model, _outcome in zip(_unique_models, _fetched):
+                    if isinstance(_outcome, BaseException):
+                        if isinstance(_outcome, TokenExpiredError):
+                            raise _outcome  # 外层统一返回「凭据已过期」
+                        spec_error_models.add(_model)
+                        self.logger.debug(
+                            f"获取设备规格失败: model={_model}, {_outcome}"
+                        )
+                    else:
+                        spec_map[_model] = _outcome
+
             for d in devices:
                 room_name = ""
                 if d.room_id:
@@ -737,76 +862,63 @@ class MijiaPlugin(NekoPluginBase):
                 if d.did in old_aliases:
                     device_info["alias"] = old_aliases[d.did]
                 
-                # 获取设备规格并缓存关键信息（siid, piid, aiid）
+                # 规格来自上面的并发预取（按 model 去重）。缺失或拉取失败都标记
+                # spec_failed 并回填旧缓存属性，避免不完整缓存以 v2 固化（否则旧
+                # 格式的扁平 value_list 会被永久写死，中文模式命令随之失效）。
                 if d.model:
-                    try:
-                        spec = await self.api.get_device_spec(d.model)
-                        # spec 缺失或没有任何属性/动作时视为失败，避免不完整缓存以 v2 固化
-                        if spec and (spec.properties or spec.actions):
-                            # 缓存属性信息（包含 siid, piid）
-                            properties = []
-                            for p in spec.properties:
-                                prop = {
-                                    "siid": p.siid,
-                                    "piid": p.piid,
-                                    "name": p.name,
-                                    "type": p.type.value if hasattr(p.type, 'value') else str(p.type),
-                                    "access": p.access.value if hasattr(p.access, 'value') else str(p.access)
-                                }
-                                if p.value_range:
-                                    prop["value_range"] = p.value_range
-                                if p.value_list:
-                                    prop["value_list"] = p.value_list
-                                if p.service_description:
-                                    prop["service_desc"] = p.service_description
-                                properties.append(prop)
-                            
-                            # 缓存操作信息（包含 siid, aiid 与参数元数据，动作调用时据此构造 in）
-                            actions = []
-                            for a in spec.actions:
-                                action = {
-                                    "siid": a.siid,
-                                    "aiid": a.aiid,
-                                    "name": a.name,
-                                }
-                                if a.parameters:
-                                    action["parameters"] = [
-                                        {
-                                            "name": p.name,
-                                            "type": p.type.value if hasattr(p.type, 'value') else str(p.type),
-                                            "required": p.required,
-                                        }
-                                        for p in a.parameters
-                                    ]
-                                actions.append(action)
-                            
-                            device_info["properties"] = properties
-                            device_info["actions"] = actions
-                        else:
-                            spec_failed = True
-                            self.logger.debug(f"设备 {d.name}({d.model}) 规格缺失，标记刷新不完整")
-                            # 与异常分支对称：回填旧缓存属性，避免规格长期为空的设备
-                            # 每次刷新都丢属性（否则缓存永远升不到 v2，每指令都全量刷新）
-                            old = old_devices.get(d.did)
-                            if old:
-                                if old.get("properties"):
-                                    device_info["properties"] = old["properties"]
-                                if old.get("actions"):
-                                    device_info["actions"] = old["actions"]
-                    except TokenExpiredError:
-                        raise  # 让外层统一返回"凭据已过期"，不能静默写半残缓存
-                    except Exception as e:
-                        self.logger.debug(f"获取设备 {d.name}({d.model}) 规格失败: {e}")
+                    spec = spec_map.get(d.model)
+                    if not (spec and (spec.properties or spec.actions)):
                         spec_failed = True
-                        # 规格获取失败：回填旧缓存里的 properties/actions 作为临时兜底，
-                        # 但标记刷新不完整，避免把旧格式（扁平 value_list）以 v2 固化
+                        reason = "获取失败" if d.model in spec_error_models else "规格缺失"
+                        self.logger.debug(
+                            f"设备 {d.name}({d.model}) 规格{reason}，标记刷新不完整"
+                        )
                         old = old_devices.get(d.did)
                         if old:
                             if old.get("properties"):
                                 device_info["properties"] = old["properties"]
                             if old.get("actions"):
                                 device_info["actions"] = old["actions"]
-                
+                    else:
+                        # 缓存属性信息（包含 siid, piid）
+                        properties = []
+                        for p in spec.properties:
+                            prop = {
+                                "siid": p.siid,
+                                "piid": p.piid,
+                                "name": p.name,
+                                "type": p.type.value if hasattr(p.type, "value") else str(p.type),
+                                "access": p.access.value if hasattr(p.access, "value") else str(p.access),
+                            }
+                            if p.value_range:
+                                prop["value_range"] = p.value_range
+                            if p.value_list:
+                                prop["value_list"] = p.value_list
+                            if p.service_description:
+                                prop["service_desc"] = p.service_description
+                            properties.append(prop)
+
+                        # 缓存操作信息（含 siid/aiid 与参数元数据，动作调用时据此构造 in）
+                        actions = []
+                        for a in spec.actions:
+                            action = {
+                                "siid": a.siid,
+                                "aiid": a.aiid,
+                                "name": a.name,
+                            }
+                            if a.parameters:
+                                action["parameters"] = [
+                                    {
+                                        "name": p.name,
+                                        "type": p.type.value if hasattr(p.type, "value") else str(p.type),
+                                        "required": p.required,
+                                    }
+                                    for p in a.parameters
+                                ]
+                            actions.append(action)
+
+                        device_info["properties"] = properties
+                        device_info["actions"] = actions
                 result.append(device_info)
 
             self.logger.info(f"设备房间注入: {room_filled} 个有房间, {room_empty} 个无房间")
@@ -1057,24 +1169,38 @@ class MijiaPlugin(NekoPluginBase):
         except Exception as e:
             return Err(SdkError(f"读取别名失败: {e}"))
 
-    @ui.action(label=tr("actions.smartControl.label", default="智能控制"), tone="success", group="control", order=10, refresh_context=True)
-    @plugin_entry(
-        id="smart_control",
-        name=tr("entries.smart_control.name", default="智能控制"),
-        description=tr("entries.smart_control.description", default="用一句话控制设备"),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "command": {"type": "string", "description": "控制命令，如'打开卧室灯'、'灯亮度50%'、'空调26度'、'执行回家场景'"}
-            },
-            "required": ["command"]
-        },
-        llm_result_fields=["message"]
+    @llm_tool(
+        name="smart_control",
+        description=SMART_CONTROL_DESCRIPTION,
+        parameters=SMART_CONTROL_SCHEMA,
+        # 单次控制最长等待：米家云端 prop/set + 写后回读校验偶发要几秒，30s
+        # 足够，且远低于 main_server 的 300s 上限。
+        timeout=30.0,
     )
-    async def smart_control(self, command: str, **_):
-        """统一设备控制入口"""
+    async def smart_control(self, *, command: Any = None, **_) -> dict[str, Any]:
+        """对话 LLM 直接调用的设备控制工具（对齐 game_agent_minecraft 的 minecraft_task）。
+
+        只挂 @llm_tool、不再挂 @plugin_entry：宿主会把 analyzer 看的入口列表里的
+        __llm_tool__* 剥掉，两边不会对同一条指令各执行一次。
+        """
+        # command 声明成 Any = None 而非必填 str：LLM 违反 schema（漏传 / 传 null /
+        # 传非字符串）时也要进方法体返回一句能读懂的错误，而不是在调用分发处抛
+        # TypeError，让模型收到一个无从下手的通用报错。
+        if not isinstance(command, str) or not command.strip():
+            return _tool_error(
+                "缺少 command 参数：请把用户的原话作为 command 传入，如 '打开卧室灯'。",
+                code="MIJIA_MISSING_PARAM",
+            )
+        return _tool_envelope(await self._dispatch_smart_control(command.strip()))
+
+    async def _dispatch_smart_control(self, command: str) -> Any:
+        """统一设备控制的分发核心，返回内部 Result（Ok/Err）。
+
+        由 smart_control 的 @llm_tool 边界翻译成工具信封；query / action /
+        control 三个执行分支共用同一套 Result 约定。
+        """
         if not self.api:
-            return Err(SdkError("未登录"))
+            return Err(SdkError("未登录米家账号，无法控制设备：请先在米家插件面板完成扫码登录"))
 
         # 原始指令属会话文本，按仓库规范用 print 而非 logger
         print(f"[smart_control] 指令: {command}", flush=True)
@@ -1087,7 +1213,11 @@ class MijiaPlugin(NekoPluginBase):
             return await self._execute_scene_by_name(scene_name)
 
         # 意图路由（nlp/ 纯规则引擎）：开关/查询/动作/属性分支短路
-        devices = await self._load_devices_cache()
+        devices, load_failure = await self._load_devices_cache()
+        if load_failure and not devices:
+            # 刷新失败 ≠ 账号下没有设备。直接报真实原因，否则 route() 会落到
+            # not_found，用户听到的是「设备没匹配上」，掩盖了未登录/网络错。
+            return Err(SdkError(f"无法获取设备列表：{load_failure}"))
         result = await route(norm, devices)
         # 房间映射惰性获取：仅当匹配确实需要（not_found/ambiguous 且存在缺
         # room_name 的设备——可能是目标设备）时才调 get_homes，避免精确匹配拖慢
@@ -1112,10 +1242,14 @@ class MijiaPlugin(NekoPluginBase):
 
         if result.branch == "query":
             return await self.query_device_state(result.device_hint)
+
+        # ── 接缝：前端（规则引擎）的解析结果展平为 CommandIR，后端只认它 ──
+        # 阶段 4 的 LLM 结构化前端会构出同样结构的 CommandIR，复用同一条执行路径。
+        ir = to_command_ir(result)
         if result.branch == "action":
-            return await self._execute_action_branch(result)
+            return await self._execute_action_branch(ir)
         if result.branch in ("switch", "control"):
-            return await self._execute_control_branch(result, command)
+            return await self._execute_control_branch(ir)
 
         return Err(SdkError(
             "无法理解命令。支持的格式：\n"
@@ -1126,17 +1260,20 @@ class MijiaPlugin(NekoPluginBase):
             "  场景：'执行回家场景'"
         ))
 
-    async def _execute_action_branch(self, result: RouteResult) -> Any:
-        """执行设备动作分支（开始/暂停/停止/回充等）"""
-        match_result = result.match
-        if match_result and match_result.status == "ok" and len(match_result.devices) == 1:
-            device = match_result.devices[0]
-            did = device.get("did")
+    async def _execute_action_branch(self, ir: CommandIR) -> Any:
+        """执行设备动作分支（开始/暂停/停止/回充等）。
+
+        入参是 CommandIR 而非 RouteResult——后端不再认识前端的解析对象，
+        这样 LLM 结构化前端（阶段 4）能复用同一条执行路径。
+        """
+        if ir.match_status == "ok" and ir.device_info is not None:
+            device = ir.device_info
+            did = ir.device_id
             actions = device.get("actions", [])
-            display_name = device.get("alias") or device.get("name", result.device_hint)
+            display_name = device.get("alias") or device.get("name", ir.device)
 
             # 从动词推断 action name
-            candidates = VERB_TO_ACTION.get(result.verb, [result.verb])
+            candidates = VERB_TO_ACTION.get(ir.verb, [ir.verb])
             matched_action = None
             for a in actions:
                 aname = a.get("name", "").lower()
@@ -1158,47 +1295,45 @@ class MijiaPlugin(NekoPluginBase):
                     )
                     # call_device_action 返回 False 表示动作被设备/网关拒绝，不能报成功
                     if act_result:
-                        return Ok({"success": True, "message": f"✅ 已对'{display_name}'执行'{result.verb}'操作", "device": display_name, "action": result.verb, "result": act_result})
+                        return Ok({"success": True, "message": f"✅ 已对'{display_name}'执行'{ir.verb}'操作", "device": display_name, "action": ir.verb, "result": act_result})
                     return Err(SdkError(self.i18n.t(
                         "switch.action_rejected",
                         default="对'{name}'执行'{action}'操作失败（动作被拒绝）",
-                        name=display_name, action=result.verb,
+                        name=display_name, action=ir.verb,
                     )))
                 except TokenExpiredError:
                     return Err(SdkError("凭据已过期，请重新登录"))
                 except Exception as e:
-                    return Err(SdkError(f"对'{display_name}'执行'{result.verb}'操作失败: {e}"))
+                    return Err(SdkError(f"对'{display_name}'执行'{ir.verb}'操作失败: {e}"))
             else:
                 action_names = [a.get("name") for a in actions]
                 return Err(SdkError(
-                    f"'{display_name}'没有'{result.verb}'操作。可用操作：{', '.join(action_names) if action_names else '无'}"
+                    f"'{display_name}'没有'{ir.verb}'操作。可用操作：{', '.join(action_names) if action_names else '无'}"
                 ))
 
         # 设备未匹配/歧义：明确报错（原逻辑在此场景会掉落到属性解析，产生无意义结果）
-        if match_result and match_result.message:
-            return Err(SdkError(match_result.message))
-        return Err(SdkError(f"未找到设备'{result.device_hint}'"))
+        if ir.match_message:
+            return Err(SdkError(ir.match_message))
+        return Err(SdkError(f"未找到设备'{ir.device}'"))
 
-    async def _execute_control_branch(self, result: RouteResult, command: str) -> Any:
+    async def _execute_control_branch(self, ir: CommandIR) -> Any:
         """执行控制分支（switch / set_prop / adjust_prop）"""
-        match_result = result.match
-        if match_result is None or match_result.status != "ok":
-            return Err(SdkError(match_result.message if match_result else "未找到设备"))
-        parsed = result.parsed
-        if parsed is None:
+        if ir.match_status != "ok" or ir.device_info is None:
+            return Err(SdkError(ir.match_message or "未找到设备"))
+        if not ir.action:
             return Err(SdkError("无法解析控制命令"))
 
-        device = match_result.devices[0]
-        did = device.get("did")
-        display_name = device.get("alias") or device.get("name", result.device_hint)
+        device = ir.device_info
+        did = ir.device_id
+        display_name = device.get("alias") or device.get("name", ir.device)
         props = device.get("properties", [])
         actions = device.get("actions", [])
 
-        if parsed.action == "switch":
-            return await self._execute_switch(props, actions, did, display_name, parsed.value, command)
-        if parsed.action == "adjust_prop":
-            return await self._execute_adjust_prop(props, did, display_name, parsed)
-        return await self._execute_set_prop(props, did, display_name, parsed)
+        if ir.action == "switch":
+            return await self._execute_switch(props, actions, did, display_name, ir.value, ir.raw_text)
+        if ir.action == "adjust_prop":
+            return await self._execute_adjust_prop(props, did, display_name, ir)
+        return await self._execute_set_prop(props, did, display_name, ir)
 
     @staticmethod
     def _find_power_action(actions: list[dict], value: Any) -> Optional[dict]:
@@ -1259,18 +1394,6 @@ class MijiaPlugin(NekoPluginBase):
         if len(switch_props) == 1:
             switch = switch_props[0]
         else:
-            # 从命令中提取方位关键词
-            _POS_MAP = [
-                (r"左", ["Left", "left"]),
-                (r"右", ["Right", "right"]),
-                (r"中", ["Middle", "middle", "Center", "center"]),
-                (r"(?:一|1)键", ["First", "first", "1"]),
-                (r"(?:二|2)键", ["Second", "second", "2"]),
-                (r"(?:三|3)键", ["Third", "third", "3"]),
-                (r"(?:四|4)键", ["Fourth", "fourth", "4"]),
-                (r"(?:五|5)键", ["Fifth", "fifth", "5"]),
-                (r"(?:六|6)键", ["Sixth", "sixth", "6"]),
-            ]
             for pattern, en_keywords in _POS_MAP:
                 if re.search(pattern, command):
                     for p in switch_props:
@@ -1296,7 +1419,9 @@ class MijiaPlugin(NekoPluginBase):
             success = await self.api.control_device(did, siid, piid, value)
             action_text = "打开" if value else "关闭"
             if not success:
-                return Ok({"success": False, "message": f"❌ {action_text}'{display_name}'失败"})
+                # 语义失败必须走 Err：@llm_tool 边界按 Ok/Err 决定 is_error，
+                # Ok({"success": False}) 会被标成 is_error=false 对模型假报成功。
+                return Err(SdkError(f"{action_text}'{display_name}'失败"))
             # 写后回读校验：防止写入"属性合法但并非电源"的字段（如电视 speaker-mode
             # 的 is-on）被 API 照单全收返回 code 0，却对真机毫无作用。
             # 只写（access="write"）属性读不回来，无法验证是否真生效 → 返回未确认，
@@ -1345,14 +1470,15 @@ class MijiaPlugin(NekoPluginBase):
             self.logger.exception("控制失败")
             return Err(SdkError(f"控制失败: {e}"))
 
-    async def _execute_adjust_prop(self, props: list[dict], did: str, display_name: str, parsed: Any) -> Any:
+    async def _execute_adjust_prop(self, props: list[dict], did: str, display_name: str, ir: CommandIR) -> Any:
         """执行相对值调整（调亮一点/温度高一点）"""
-        direction = parsed.direction
-        delta = parsed.delta
-        prop = self._find_property_for_control(props, parsed.prop, None)
+        prop_name = ir.attribute
+        direction = ir.direction
+        delta = ir.delta
+        prop = self._find_property_for_control(props, prop_name, None)
         if not prop:
             available = [p.get("name") for p in props if p.get("access") in ["write", "read_write", "notify_read_write"]]
-            return Err(SdkError(f"'{display_name}'没有可控制的'{parsed.prop}'属性。可控制属性：{', '.join(available) if available else '无'}"))
+            return Err(SdkError(f"'{display_name}'没有可控制的'{prop_name}'属性。可控制属性：{', '.join(available) if available else '无'}"))
 
         siid = prop.get("siid")
         piid = prop.get("piid")
@@ -1368,7 +1494,7 @@ class MijiaPlugin(NekoPluginBase):
             cur_value = None
 
         if cur_value is None:
-            return Err(SdkError(f"无法读取'{display_name}'的{parsed.prop}当前值"))
+            return Err(SdkError(f"无法读取'{display_name}'的{prop_name}当前值"))
 
         # 计算目标值（钳值 + 步长对齐，逻辑见 nlp/value_resolver.py）
         target = resolve_adjust_target(cur_value, direction, delta, vr)
@@ -1376,34 +1502,36 @@ class MijiaPlugin(NekoPluginBase):
         try:
             success = await self.api.control_device(did, siid, piid, target)
             if success:
-                return Ok({"success": True, "message": f"✅ 已将'{display_name}'的{parsed.prop}从{cur_value}调整为{target}", "device": display_name, "property": parsed.prop, "value": target})
-            else:
-                return Ok({"success": False, "message": f"❌ 调整'{display_name}'的{parsed.prop}失败"})
+                return Ok({"success": True, "message": f"✅ 已将'{display_name}'的{prop_name}从{cur_value}调整为{target}", "device": display_name, "property": prop_name, "value": target})
+            # 语义失败走 Err（同 _execute_set_prop：Ok({"success": False}) 会被
+            # @llm_tool 边界标成 is_error=false）
+            return Err(SdkError(f"调整'{display_name}'的{prop_name}失败"))
         except TokenExpiredError:
             return Err(SdkError("凭据已过期，请重新登录"))
         except MijiaAPIException as e:
-            return Err(SdkError(f"调整'{display_name}'的{parsed.prop}失败: {e}"))
+            return Err(SdkError(f"调整'{display_name}'的{prop_name}失败: {e}"))
         except Exception as e:
             self.logger.exception("调整失败")
             return Err(SdkError(f"调整失败: {e}"))
 
-    async def _execute_set_prop(self, props: list[dict], did: str, display_name: str, parsed: Any) -> Any:
+    async def _execute_set_prop(self, props: list[dict], did: str, display_name: str, ir: CommandIR) -> Any:
         """执行属性控制（亮度/温度/模式等）"""
-        if not parsed.prop:
+        prop_name = ir.attribute
+        if not prop_name:
             return Err(SdkError("请指定要调整的属性，如'灯亮度50%'"))
 
-        prop = self._find_property_for_control(props, parsed.prop, parsed.value)
+        prop = self._find_property_for_control(props, prop_name, ir.value)
         if not prop:
             available = [p.get("name") for p in props if p.get("access") in ["write", "read_write", "notify_read_write"]]
-            return Err(SdkError(f"'{display_name}'没有可控制的'{parsed.prop}'属性。可控制属性：{', '.join(available) if available else '无'}"))
+            return Err(SdkError(f"'{display_name}'没有可控制的'{prop_name}'属性。可控制属性：{', '.join(available) if available else '无'}"))
 
         # 能力校验：单位/范围与设备能力不兼容时（如 亮度 不接受 档），由能力层判
         # INVALID_UNIT / INVALID_VALUE，而非 NLP 层替设备决定
-        cap_check = validate_command(prop, parsed.prop, parsed.value, parsed.unit)
+        cap_check = validate_command(prop, prop_name, ir.value, ir.unit)
         if cap_check.status != "valid":
             return Err(SdkError(cap_check.message))
 
-        value = parsed.value
+        value = ir.value
         # 极值处理："最高"/"最低" → 从 value_range 取边界
         if value in ("max", "min"):
             vr = prop.get("value_range", [])
@@ -1416,7 +1544,7 @@ class MijiaPlugin(NekoPluginBase):
                 ]
                 value = max(vals) if value == "max" else min(vals)
             else:
-                return Err(SdkError(f"'{display_name}'的{parsed.prop}没有值范围信息，无法设置极值"))
+                return Err(SdkError(f"'{display_name}'的{prop_name}没有值范围信息，无法设置极值"))
 
         # 模式/档位枚举转换：中文 → 设备 spec 数字值
         if isinstance(value, str) and prop.get("value_list"):
@@ -1436,7 +1564,7 @@ class MijiaPlugin(NekoPluginBase):
                     for item in prop.get("value_list", [])
                 ]
                 return Err(SdkError(
-                    f"'{display_name}'的{parsed.prop}不支持'{value}'。"
+                    f"'{display_name}'的{prop_name}不支持'{value}'。"
                     f"可用模式：{', '.join(available_modes)}"
                 ))
 
@@ -1452,16 +1580,17 @@ class MijiaPlugin(NekoPluginBase):
             if success:
                 unit = prop.get("unit", "")
                 value_display = f"{value}{unit}" if unit else str(value)
-                return Ok({"success": True, "message": f"✅ 已将'{display_name}'的{parsed.prop}设为{value_display}", "device": display_name, "property": parsed.prop, "value": value})
-            else:
-                return Ok({"success": False, "message": f"❌ 设置'{display_name}'的{parsed.prop}失败"})
+                return Ok({"success": True, "message": f"✅ 已将'{display_name}'的{prop_name}设为{value_display}", "device": display_name, "property": prop_name, "value": value})
+            # 语义失败走 Err：下面 MijiaAPIException 分支也是 Err，同一类失败不
+            # 能一半 Ok 一半 Err——@llm_tool 边界只看 Ok/Err 定 is_error。
+            return Err(SdkError(f"设置'{display_name}'的{prop_name}失败"))
         except TokenExpiredError:
             return Err(SdkError("凭据已过期，请重新登录"))
         except MijiaAPIException as e:
             self.logger.warning(f"API控制失败: device={display_name}, did={did}, siid={siid}, piid={piid}, value={value}, error={e}")
             if e.code == -6:
-                return Err(SdkError(f"设置'{display_name}'的{parsed.prop}失败：设备不支持该操作或参数有误"))
-            return Err(SdkError(f"设置'{display_name}'的{parsed.prop}失败: {e}"))
+                return Err(SdkError(f"设置'{display_name}'的{prop_name}失败：设备不支持该操作或参数有误"))
+            return Err(SdkError(f"设置'{display_name}'的{prop_name}失败: {e}"))
         except Exception as e:
             self.logger.exception("控制失败")
             return Err(SdkError(f"控制失败: {e}"))
@@ -1535,26 +1664,6 @@ class MijiaPlugin(NekoPluginBase):
     def _find_property_for_control(self, props: list[dict], prop_name: str, value: Any) -> Optional[dict]:
         """根据属性名和目标值，从设备属性列表中找到匹配的可写属性"""
         prop_name_lower = prop_name.lower()
-
-        # 属性名关键词映射（对齐小爱同学标准翻译表）
-        PROP_KEYWORDS = {
-            "亮度": ["亮度", "brightness"],
-            "色温": ["色温", "color temperature"],
-            "温度": ["目标温度", "设定温度", "温度", "target temperature", "target-temperature", "temperature"],
-            "音量": ["音量", "volume"],
-            "风速": ["风速", "风量", "风档", "档位", "fan speed", "fan level", "fan_level", "fan-level", "stepless_fan_level"],
-            "模式": ["模式", "mode"],
-            "浓度": ["浓度", "density"],
-            "湿度": ["湿度", "设定湿度", "target-humidity", "target_humidity", "humidity"],
-            "位置": ["位置", "position", "target-position", "target_position"],
-            "吸力": ["吸力", "suction", "suction-level", "suction_level"],
-            "档位": ["档位", "heat level", "heat-level", "heat_level", "massage-strength", "massage_strength"],
-            "水温": ["水温", "设定温度", "target-temperature", "target_temperature"],
-            "水量": ["水量", "泵量", "pump-flux", "pump_flux", "mop-water-output-level"],
-            "角度": ["角度", "angle", "backrest-angle", "backrest_angle", "leg-rest-angle", "leg-rest_angle"],
-            "转速": ["转速", "spin-speed", "spin_speed"],
-            "颜色": ["颜色", "color", "Color", "rgb-color", "color-temperature"],
-        }
 
         keywords = PROP_KEYWORDS.get(prop_name, [prop_name_lower])
 
@@ -1747,8 +1856,7 @@ class MijiaPlugin(NekoPluginBase):
             success = await self.api.execute_scene(scene["id"], home_id)
             if success:
                 return Ok({"success": True, "message": f"✅ 已执行场景'{scene['name']}'"})
-            else:
-                return Ok({"success": False, "message": f"❌ 执行场景'{scene['name']}'失败"})
+            return Err(SdkError(f"执行场景'{scene['name']}'失败"))
         except Exception as e:
             return Err(SdkError(f"执行场景失败: {e}"))
 
@@ -1773,7 +1881,9 @@ class MijiaPlugin(NekoPluginBase):
             return Err(SdkError("未登录"))
 
         # 统一设备匹配（支持区域+设备名、别名、模糊匹配）
-        cached_devices = await self._load_devices_cache()
+        cached_devices, load_failure = await self._load_devices_cache()
+        if load_failure and not cached_devices:
+            return Err(SdkError(f"无法获取设备列表：{load_failure}"))
         match_result = match_devices(name, cached_devices)
         # 房间映射惰性获取：仅当匹配需要（not_found/ambiguous 且存在缺 room_name
         # 的设备）时才调 get_homes，避免精确匹配被拖慢
@@ -1840,293 +1950,6 @@ class MijiaPlugin(NekoPluginBase):
             states = []
             lines = [f"📱 设备 '{device_name}' 当前状态："]
             lines.append("")
-
-            # 属性名本地化映射（对齐小爱同学标准翻译表）
-            NAME_MAP = {
-                # ── 设备信息类 ──
-                "Device Manufacturer": "设备制造商",
-                "Device Model": "设备型号",
-                "Device ID": "设备ID",
-                "Current Firmware Version": "当前固件版本",
-                "Serial Number": "序列号",
-                "Device Name": "设备名称",
-                "Device Location": "设备位置",
-                "Model": "型号",
-                "Manufacturer": "制造商",
-                "Firmware Version": "固件版本",
-                "Hardware Version": "硬件版本",
-                "MAC Address": "MAC地址",
-                "IP Address": "IP地址",
-                "RSSI": "信号强度",
-                "Battery Level": "电池电量",
-                "battery-level": "电池电量",
-                "Battery Voltage": "电池电压",
-                "Charging State": "充电状态",
-                "Low Battery": "低电量",
-
-                # ── 开关控制类（灯/插座/开关等共用） ──
-                "Switch Status": "开关状态",
-                "Power": "电源",
-                "On": "开启",
-                "Off": "关闭",
-                "Toggle": "切换",
-                "Default Power On State": "默认通电状态",
-                "Power Off Memory": "断电记忆",
-                "Physical Control Locked": "儿童锁",
-                "physical-controls-locked": "儿童锁",
-                "physical_controls_locked": "儿童锁",
-                "Child Lock": "童锁",
-
-                # ── 功率电量类（插座/开关） ──
-                "Electric Power": "实时功率",
-                "Power Consumption": "累计用电量",
-                "Voltage": "电压",
-                "Current": "电流",
-                "Load Power": "负载功率",
-                "Total Consumption": "总用电量",
-                "Today Consumption": "今日用电量",
-                "Month Consumption": "本月用电量",
-                "Power Factor": "功率因数",
-                "Leakage Current": "漏电流",
-                "Surge Power": "浪涌功率",
-                "over-ele-day": "日用电超限阈值",
-                "over-ele-month": "月用电超限阈值",
-                "on-off-count": "开关次数",
-
-                # ── 照明类（灯/风扇灯/浴霸灯） ──
-                "Brightness": "亮度",
-                "brightness": "亮度",
-                "Color Temperature": "色温",
-                "color_temperature": "色温",
-                "Color": "颜色",
-                "color": "颜色",
-                "Hue": "色相",
-                "Saturation": "饱和度",
-                "Light Mode": "灯光模式",
-                "Scene": "场景",
-                "Night Light": "夜灯",
-                "Ambient Light": "氛围灯",
-                "ambient-light": "氛围灯",
-                "Illuminance": "照度",
-                "illumination": "光照度",
-                "Colorful": "彩光模式",
-                "Flow": "流光模式",
-
-                # ── 环境传感器类（温湿度传感器/空气检测仪等） ──
-                "temperature": "温度",
-                "Temperature": "温度",
-                "relative_humidity": "湿度",
-                "relative-humidity": "湿度",
-                "humidity": "湿度",
-                "Humidity": "湿度",
-                "pm25_density": "PM2.5",
-                "PM2.5": "PM2.5",
-                "PM10": "PM10",
-                "co2-density": "二氧化碳浓度",
-                "CO2": "二氧化碳",
-                "TVOC": "总挥发性有机物",
-                "hcho-density": "甲醛浓度",
-                "Formaldehyde": "甲醛",
-                "AQI": "空气质量指数",
-                "air-quality": "空气质量",
-                "Air Quality": "空气质量",
-                "Air Quality Level": "空气质量等级",
-                "Pressure": "气压",
-                "Noise": "噪音",
-                "Light Intensity": "光照强度",
-                "UV Index": "紫外线指数",
-                "Water Leak": "水浸检测",
-                "Smoke Alarm": "烟雾报警",
-                "Gas Alarm": "燃气报警",
-                "Door Status": "门状态",
-                "Window Status": "窗状态",
-                "Motion Detection": "移动检测",
-                "Occupancy": "有人/无人",
-
-                # ── 空调/温控类 ──
-                "target_temperature": "目标温度",
-                "target-temperature": "目标温度",
-                "Target Temperature": "目标温度",
-                "Current Temperature": "当前温度",
-                "Mode": "模式",
-                "mode": "模式",
-                "Fan Speed": "风速",
-                "fan_speed": "风速",
-                "Fan Level": "风量档位",
-                "fan_level": "风量档位",
-                "fan-level": "风量档位",
-                "stepless_fan_level": "无级风速",
-                "Swing Mode": "摆风模式",
-                "vertical_swing": "上下摆风/上下扫风",
-                "Vertical Swing": "上下摆风",
-                "horizontal_swing": "左右摆风",
-                "Horizontal Swing": "左右摆风",
-                "Sleep Mode": "睡眠模式",
-                "sleep-mode": "睡眠模式",
-                "Eco Mode": "节能模式",
-                "eco": "节能模式",
-                "Dry Mode": "除湿模式",
-                "dryer": "干燥/烘干",
-                "Heat Mode": "制热模式",
-                "heater": "辅热模式",
-                "Cool Mode": "制冷模式",
-                "Auto Mode": "自动模式",
-                "Heating": "加热中",
-                "Cooling": "制冷中",
-                "Defrosting": "除霜中",
-                "soft-wind": "柔风",
-                "un-straight-blowing": "防直吹",
-                "uv": "杀菌功能",
-                "indicator-light": "指示灯",
-
-                # ── 窗帘/电机/晾衣架类 ──
-                "motor_control": "电机控制",
-                "Motor Control": "电机控制",
-                "Motor Reverse": "电机反转",
-                "Position": "位置",
-                "position": "位置",
-                "Current Position": "当前位置",
-                "target-position": "目标位置",
-                "target_position": "目标位置",
-                "Target Position": "目标位置",
-                "Run Time": "运行时间",
-
-                # ── 安防/报警类 ──
-                "alarm": "提示音",
-                "Alarm": "提示音",
-                "Alarm Volume": "警报音量",
-                "Alarm Duration": "警报时长",
-                "Guard Mode": "守护模式",
-                "Away Mode": "离家模式",
-                "Home Mode": "在家模式",
-                "Sleep Mode Guard": "睡眠守护",
-
-                # ── 定时/倒计时类 ──
-                "start-time": "开始时间",
-                "end-time": "结束时间",
-                "duration": "持续时长",
-                "left-time": "剩余时间",
-                "left_time": "剩余时间",
-                "countdown": "倒计时",
-                "Timer": "定时器",
-                "Schedule": "定时任务",
-                "target-time": "目标时间",
-                "target_time": "目标时间",
-                "cook-time": "烹饪时间",
-                "cook_time": "烹饪时间",
-
-                # ── 滤芯/耗材类 ──
-                "filter-life-level": "滤芯剩余寿命",
-                "filter_life_level": "滤芯剩余寿命",
-                "filter-life-time": "滤芯剩余天数",
-                "filter-left-time": "滤芯剩余天数",
-                "filter_left_time": "滤芯剩余天数",
-                "Filter Life": "滤芯寿命",
-                "Filter Used Time": "滤芯已用时间",
-                "repellent-left-level": "蚊香剩余量",
-
-                # ── 洗衣机/洗碗机类 ──
-                "rinse-times": "漂洗次数",
-                "drying-time": "烘干时长",
-                "door-state": "舱门状态",
-                "spin-speed": "脱水转速",
-                "detergent-self-delivery": "洗衣液自动投放",
-                "detergent-left-level": "洗衣液剩余量",
-                "fabric-softener-self-delivery": "柔顺剂自动投放",
-                "fabric-softener-left-level": "柔顺剂剩余量",
-
-                # ── 水质/净饮类 ──
-                "tds_in": "入水水质",
-                "tds_out": "出水水质",
-                "tds-out": "出水水质",
-
-                # ── 扫地机类 ──
-                "suction-level": "吸力档位",
-                "sweep-mop-type": "扫拖模式",
-                "mop-water-output-level": "抹布水量",
-                "battery": "电池电量",
-                "current-step-count": "累计步数",
-                "current-calorie-consumption": "消耗热量",
-                "working-time": "工作时间",
-                "current-distance": "跑步里程",
-
-                # ── 状态/故障类 ──
-                "status": "状态",
-                "on": "开关状态",
-                "power": "功率设定",
-                "data-value": "数据值",
-                "Device Fault": "设备故障",
-                "Fault": "故障",
-                "Error": "错误",
-                "Error Code": "错误代码",
-                "Working Time": "工作时间",
-                "Remaining Time": "剩余时间",
-                "protect-time": "保护时间",
-                "anion": "负离子",
-                "identify": "定位",
-
-                # ── 浴霸类 ──
-                "heating": "制热",
-                "blow": "吹风",
-                "ventilation": "换气",
-                "stop-working": "停止工作",
-
-                # ── 冰箱类 ──
-                "Refrigerating Chamber": "冷藏室",
-                "Freezing Chamber": "冷冻室",
-                "Change Chamber": "变温室",
-
-                # ── 鱼缸类 ──
-                "water-pump": "水泵",
-                "pump-flux": "水泵水量",
-                "automatic-feeding": "自动喂食",
-                "no-disturb": "勿扰模式",
-            }
-
-            # 硬编码单位映射（属性名 -> 单位，对齐小爱同学标准翻译表）
-            UNIT_MAP = {
-                "Electric Power": "W",
-                "Power Consumption": "kWh",
-                "Voltage": "V",
-                "Current": "A",
-                "temperature": "°C",
-                "Temperature": "°C",
-                "target_temperature": "°C",
-                "target-temperature": "°C",
-                "relative_humidity": "%",
-                "relative-humidity": "%",
-                "humidity": "%",
-                "Humidity": "%",
-                "target-humidity": "%",
-                "target_humidity": "%",
-                "pm25_density": "μg/m³",
-                "PM2.5": "μg/m³",
-                "co2-density": "ppm",
-                "CO2": "ppm",
-                "hcho-density": "mg/m³",
-                "Formaldehyde": "mg/m³",
-                "Brightness": "%",
-                "brightness": "%",
-                "Battery Level": "%",
-                "battery-level": "%",
-                "filter-life-level": "%",
-                "filter_life_level": "%",
-                "filter-life-time": "天",
-                "filter-left-time": "天",
-                "left-time": "分钟",
-                "left_time": "分钟",
-                "cook-time": "分钟",
-                "cook_time": "分钟",
-                "target-time": "分钟",
-                "drying-time": "分钟",
-                "spin-speed": "转",
-                "speed-level": "km/h",
-                "Illuminance": "lux",
-                "illumination": "lux",
-                "tds_in": "ppm",
-                "tds_out": "ppm",
-                "tds-out": "ppm",
-            }
 
             for prop in readable_props:
                 key = (prop.get("siid"), prop.get("piid"))

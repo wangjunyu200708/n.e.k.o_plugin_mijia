@@ -48,7 +48,7 @@ Para evitar confusão, recomendamos criar o hábito de usar **`[nome do cômodo]
 
 Se precisar chamar diretamente as interfaces do plugin, estes são os pontos de entrada principais:
 
-- **`smart_control`** — Controle unificado por linguagem natural (recomendado)  
+- **`smart_control`** — Controle unificado por linguagem natural (**ferramenta de conversa `@llm_tool`**: invocada automaticamente pelo companheiro de IA durante o diálogo; não é um `@plugin_entry`, então não pode ser acionada com `/runs` + entry_id)  
   Parâmetros: `{ "command": "acenda a luz do quarto" }`
 - **`list_devices`** — Obter lista de dispositivos  
   Parâmetros: `{ "home_id": "12345" }`

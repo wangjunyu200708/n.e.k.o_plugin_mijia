@@ -37,18 +37,36 @@ _COMMAND_UNIT = {
 
 @dataclass
 class CommandIR:
-    """轻量中间表示：路由结果 + 匹配设备 展平成统一结构。"""
+    """指令的中间表示——**前端与后端的接缝**。
+
+    前端（中文规则引擎 / 未来的 LLM 结构化）负责把用户原话填成这个结构；
+    后端（设备匹配 + 能力校验 + 执行分支）只认这个结构，不认谁的解析结果。
+
+    几个字段的归属：
+      * ``action``        —— **要做什么**（switch / set_prop / adjust_prop /
+                             scene / query），取自解析结果的语义动作，不是路由分支名
+      * ``device_info``   —— 匹配到的**完整设备 dict**（含 properties / actions /
+                             did / name / alias）。执行分支靠它拿属性表与动作表；
+                             缺了它后端还得回头问 MatchResult，接缝就漏了
+      * ``match_status`` / ``match_message`` —— 前端带过来的匹配结论，供后端在
+                             未命中/歧义时复述原因，无需回传前端对象
+      * ``verb``          —— 动作动词（开始 / 暂停 / 回充…），动作分支据此选 aiid
+    """
 
     raw_text: str = ""
     action: str = ""
     room: str = ""
     device: str = ""
     device_id: str = ""
+    device_info: Optional[dict] = None
     attribute: str = ""
     value: Any = None
     unit: str = ""
     direction: int = 1
     delta: Optional[float] = None
+    verb: str = ""
+    match_status: str = ""
+    match_message: str = ""
 
 
 @dataclass
@@ -68,23 +86,36 @@ def command_unit(unit: str) -> Optional[str]:
 
 
 def to_command_ir(result) -> CommandIR:
-    """把路由结果展平为轻量 CommandIR（供能力校验与诊断；鸭子类型，避免循环导入）。"""
-    ir = CommandIR(raw_text=getattr(result, "raw_text", ""), action=getattr(result, "branch", ""))
+    """把路由结果展平为 CommandIR（鸭子类型，避免循环导入）。
+
+    `action` 取**语义动作**：有 parsed 时用 parsed.action（switch / set_prop /
+    adjust_prop），否则退回分支名（scene / query / action）。执行分支据此分派。
+    """
+    branch = getattr(result, "branch", "")
+    ir = CommandIR(raw_text=getattr(result, "raw_text", ""), action=branch)
     match = getattr(result, "match", None)
+    if match is not None:
+        ir.match_status = match.status
+        ir.match_message = match.message or ""
     if match is not None and match.status == "ok" and match.device is not None:
+        ir.device_info = match.device
         ir.room = match.device.get("room_name", "")
         ir.device = match.device.get("name", "")
         ir.device_id = match.device.get("did", "")
     else:
         ir.device = getattr(result, "device_hint", "")
+    ir.verb = getattr(result, "verb", "") or ""
     parsed = getattr(result, "parsed", None)
     if parsed is not None:
+        ir.action = getattr(parsed, "action", "") or branch
         ir.attribute = parsed.prop or ""
         ir.value = parsed.value
         ir.unit = parsed.unit
         ir.direction = parsed.direction
         ir.delta = parsed.delta
-    elif ir.action == "switch":
+    elif branch == "switch":
+        # 路由判为 switch 但没有 parsed：只补属性名，值留给调用方，避免瞎猜。
+        ir.action = "switch"
         ir.attribute = "开关"
     return ir
 

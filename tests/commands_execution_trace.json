@@ -1,0 +1,5121 @@
+[
+  {
+    "index": 1,
+    "input": "打开客厅的灯",
+    "normalized": "打开客厅的灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "客厅的灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_living",
+          "name": "客厅灯",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "客厅的灯",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 2,
+    "input": "关闭卧室的灯",
+    "normalized": "关闭卧室的灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "卧室的灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_bedroom",
+          "name": "卧室灯",
+          "room": "卧室"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "卧室的灯",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 3,
+    "input": "把灯光调亮一点",
+    "normalized": "灯光调亮一点",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "灯光",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '灯光' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "灯光",
+      "action": "adjust_prop",
+      "prop": "亮度",
+      "value": null,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "control_device_missing",
+    "flags": []
+  },
+  {
+    "index": 4,
+    "input": "把灯光调暗一点",
+    "normalized": "灯光调暗一点",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "灯光",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '灯光' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "灯光",
+      "action": "adjust_prop",
+      "prop": "亮度",
+      "value": null,
+      "unit": "",
+      "direction": -1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "control_device_missing",
+    "flags": []
+  },
+  {
+    "index": 5,
+    "input": "把灯光调到百分之五十",
+    "normalized": "灯光调到百分之五十",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "灯光",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '灯光' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "灯光",
+      "action": "set_prop",
+      "prop": "亮度",
+      "value": 100,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "control_device_missing",
+    "flags": [
+      "percent_expr"
+    ]
+  },
+  {
+    "index": 6,
+    "input": "打开餐厅的氛围灯",
+    "normalized": "打开餐厅的氛围灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "餐厅的氛围灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_dining",
+          "name": "餐厅灯",
+          "room": "餐厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "餐厅的氛围灯",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 7,
+    "input": "关闭走廊的夜灯",
+    "normalized": "关闭走廊的夜灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "走廊的夜灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_corridor",
+          "name": "走廊灯",
+          "room": "走廊"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "走廊的夜灯",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 8,
+    "input": "把客厅灯调成暖色调",
+    "normalized": "客厅灯调成暖色调",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 9,
+    "input": "把卧室灯调成冷白光",
+    "normalized": "卧室灯调成冷白光",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 10,
+    "input": "开启全屋灯光",
+    "normalized": "开启全屋灯光",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "全屋灯光",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '全屋灯光' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "全屋灯光",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "switch_device_missing",
+    "flags": []
+  },
+  {
+    "index": 11,
+    "input": "关闭全屋灯光",
+    "normalized": "关闭全屋灯光",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "全屋灯光",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '全屋灯光' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "全屋灯光",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "switch_device_missing",
+    "flags": []
+  },
+  {
+    "index": 12,
+    "input": "打开床头灯",
+    "normalized": "打开床头灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "床头灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_bedside",
+          "name": "床头灯",
+          "room": "卧室"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "床头灯",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 13,
+    "input": "关闭阳台灯",
+    "normalized": "关闭阳台灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "阳台灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_balcony",
+          "name": "阳台灯",
+          "room": "阳台"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "阳台灯",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 14,
+    "input": "把书房灯调成阅读模式",
+    "normalized": "书房灯调成阅读模式",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "书房灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_study",
+          "name": "书房灯",
+          "room": "书房"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "书房灯",
+      "action": "set_prop",
+      "prop": "模式",
+      "value": "阅读",
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "control_device(siid=2, piid=9, Scene Mode=阅读)（枚举转换后写回）",
+    "verdict": "control_ok",
+    "flags": []
+  },
+  {
+    "index": 15,
+    "input": "打开厨房灯",
+    "normalized": "打开厨房灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "厨房灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_kitchen",
+          "name": "厨房灯",
+          "room": "厨房"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "厨房灯",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 16,
+    "input": "关闭卫生间灯",
+    "normalized": "关闭卫生间灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "卫生间灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_bath",
+          "name": "卫生间灯",
+          "room": "卫生间"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "卫生间灯",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 17,
+    "input": "开启灯带",
+    "normalized": "开启灯带",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "灯带",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_strip",
+          "name": "灯带",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "灯带",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 18,
+    "input": "把灯带调成蓝色",
+    "normalized": "灯带调成蓝色",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "灯带",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_strip",
+          "name": "灯带",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "灯带",
+      "action": "set_prop",
+      "prop": "颜色",
+      "value": 255,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "control_device(siid=2, piid=3, Color=255)",
+    "verdict": "control_ok",
+    "flags": []
+  },
+  {
+    "index": 19,
+    "input": "关闭所有灯光",
+    "normalized": "关闭所有灯光",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "所有灯光",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '所有灯光' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "所有灯光",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "switch_device_missing",
+    "flags": []
+  },
+  {
+    "index": 20,
+    "input": "打开客厅空调",
+    "normalized": "打开客厅空调",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "客厅空调",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "客厅空调",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 21,
+    "input": "关闭卧室空调",
+    "normalized": "关闭卧室空调",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "卧室空调",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_bedroom",
+          "name": "卧室空调",
+          "room": "卧室"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "卧室空调",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 22,
+    "input": "把空调调到二十六度",
+    "normalized": "空调调到二十六度",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "空调",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空调",
+      "action": "set_prop",
+      "prop": "温度",
+      "value": 26,
+      "unit": "度",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "control_device(siid=2, piid=3, Target Temperature=26度)",
+    "verdict": "control_ok",
+    "flags": []
+  },
+  {
+    "index": 23,
+    "input": "空调制冷模式",
+    "normalized": "空调制冷模式",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "空调",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空调",
+      "action": "set_prop",
+      "prop": "模式",
+      "value": "制冷",
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "control_device(siid=2, piid=2, Mode=制冷)（枚举转换后写回）",
+    "verdict": "control_ok",
+    "flags": []
+  },
+  {
+    "index": 24,
+    "input": "空调制热模式",
+    "normalized": "空调制热模式",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "空调",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空调",
+      "action": "set_prop",
+      "prop": "模式",
+      "value": "制热",
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "control_device(siid=2, piid=2, Mode=制热)（枚举转换后写回）",
+    "verdict": "control_ok",
+    "flags": []
+  },
+  {
+    "index": 25,
+    "input": "把空调风速调大",
+    "normalized": "空调风速调大",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "空调",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空调",
+      "action": "adjust_prop",
+      "prop": "风速",
+      "value": null,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "读 'Fan Level' 当前值 → 方向1 步长/幅度None → clamp[1, 3, 1] → 写回",
+    "verdict": "adjust_ok",
+    "flags": []
+  },
+  {
+    "index": 26,
+    "input": "空调开启除湿模式",
+    "normalized": "空调开启除湿模式",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "空调开启",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空调开启",
+      "action": "set_prop",
+      "prop": "模式",
+      "value": "除湿",
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "control_device(siid=2, piid=2, Mode=除湿)（枚举转换后写回）",
+    "verdict": "control_ok",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 27,
+    "input": "空调开启睡眠模式",
+    "normalized": "空调开启睡眠模式",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "空调开启",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空调开启",
+      "action": "set_prop",
+      "prop": "模式",
+      "value": "睡眠",
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "control_device(siid=2, piid=2, Mode=睡眠)（枚举转换后写回）",
+    "verdict": "control_ok",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 28,
+    "input": "空调定时两小时后关闭",
+    "normalized": "空调定时两小时后关闭",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "空调定时两小时后",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空调定时两小时后",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 29,
+    "input": "把空调温度调高两度",
+    "normalized": "空调温度调高两度",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "空调",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空调",
+      "action": "adjust_prop",
+      "prop": "温度",
+      "value": null,
+      "unit": "",
+      "direction": 1,
+      "delta": 2.0
+    },
+    "plan": "读 'Target Temperature' 当前值 → 方向1 步长/幅度2.0 → clamp[16, 30, 1] → 写回",
+    "verdict": "adjust_ok",
+    "flags": []
+  },
+  {
+    "index": 30,
+    "input": "把空调温度调低两度",
+    "normalized": "空调温度调低两度",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "空调",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空调",
+      "action": "adjust_prop",
+      "prop": "温度",
+      "value": null,
+      "unit": "",
+      "direction": -1,
+      "delta": 2.0
+    },
+    "plan": "读 'Target Temperature' 当前值 → 方向-1 步长/幅度2.0 → clamp[16, 30, 1] → 写回",
+    "verdict": "adjust_ok",
+    "flags": []
+  },
+  {
+    "index": 31,
+    "input": "打开新风系统",
+    "normalized": "打开新风系统",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "新风系统",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "fresh_air",
+          "name": "新风系统",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "新风系统",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 32,
+    "input": "关闭新风系统",
+    "normalized": "关闭新风系统",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "新风系统",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "fresh_air",
+          "name": "新风系统",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "新风系统",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 33,
+    "input": "把空气净化器打开",
+    "normalized": "空气净化器打开",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "空气净化器",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "purifier",
+          "name": "空气净化器",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空气净化器",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 34,
+    "input": "空气净化器调到自动模式",
+    "normalized": "空气净化器调到自动模式",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "空气净化器",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "purifier",
+          "name": "空气净化器",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "空气净化器",
+      "action": "set_prop",
+      "prop": "模式",
+      "value": "自动",
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "control_device(siid=2, piid=2, Mode=自动)（枚举转换后写回）",
+    "verdict": "control_ok",
+    "flags": []
+  },
+  {
+    "index": 35,
+    "input": "打开加湿器",
+    "normalized": "打开加湿器",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "加湿器",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "humidifier",
+          "name": "加湿器",
+          "room": "卧室"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "加湿器",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 36,
+    "input": "关闭加湿器",
+    "normalized": "关闭加湿器",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "加湿器",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "humidifier",
+          "name": "加湿器",
+          "room": "卧室"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "加湿器",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 37,
+    "input": "把湿度调到百分之五十",
+    "normalized": "湿度调到百分之五十",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ambiguous",
+      "devices": [
+        {
+          "did": "light_living",
+          "name": "客厅灯",
+          "room": "客厅"
+        },
+        {
+          "did": "light_bedroom",
+          "name": "卧室灯",
+          "room": "卧室"
+        },
+        {
+          "did": "light_bedside",
+          "name": "床头灯",
+          "room": "卧室"
+        },
+        {
+          "did": "light_balcony",
+          "name": "阳台灯",
+          "room": "阳台"
+        },
+        {
+          "did": "light_study",
+          "name": "书房灯",
+          "room": "书房"
+        },
+        {
+          "did": "light_kitchen",
+          "name": "厨房灯",
+          "room": "厨房"
+        },
+        {
+          "did": "light_bath",
+          "name": "卫生间灯",
+          "room": "卫生间"
+        },
+        {
+          "did": "light_dining",
+          "name": "餐厅灯",
+          "room": "餐厅"
+        },
+        {
+          "did": "light_corridor",
+          "name": "走廊灯",
+          "room": "走廊"
+        },
+        {
+          "did": "light_entry",
+          "name": "玄关灯",
+          "room": "玄关"
+        },
+        {
+          "did": "light_strip",
+          "name": "灯带",
+          "room": "客厅"
+        },
+        {
+          "did": "light_floor",
+          "name": "地灯",
+          "room": "客厅"
+        },
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        },
+        {
+          "did": "ac_bedroom",
+          "name": "卧室空调",
+          "room": "卧室"
+        },
+        {
+          "did": "ac_master",
+          "name": "主卧空调",
+          "room": "主卧"
+        },
+        {
+          "did": "fresh_air",
+          "name": "新风系统",
+          "room": "客厅"
+        },
+        {
+          "did": "purifier",
+          "name": "空气净化器",
+          "room": "客厅"
+        },
+        {
+          "did": "humidifier",
+          "name": "加湿器",
+          "room": "卧室"
+        },
+        {
+          "did": "fan",
+          "name": "电风扇",
+          "room": "客厅"
+        },
+        {
+          "did": "heater",
+          "name": "地暖",
+          "room": "客厅"
+        },
+        {
+          "did": "water_heater",
+          "name": "热水器",
+          "room": "卫生间"
+        },
+        {
+          "did": "dehumidifier",
+          "name": "除湿机",
+          "room": "客厅"
+        },
+        {
+          "did": "hood",
+          "name": "抽油烟机",
+          "room": "厨房"
+        },
+        {
+          "did": "curtain_living",
+          "name": "客厅窗帘",
+          "room": "客厅"
+        },
+        {
+          "did": "curtain_bedroom",
+          "name": "卧室窗帘",
+          "room": "卧室"
+        },
+        {
+          "did": "curtain_balcony",
+          "name": "阳台窗帘",
+          "room": "阳台"
+        },
+        {
+          "did": "rack",
+          "name": "晾衣架",
+          "room": "阳台"
+        },
+        {
+          "did": "lock",
+          "name": "智能门锁",
+          "room": "玄关"
+        },
+        {
+          "did": "camera_door",
+          "name": "门口监控",
+          "room": "门口"
+        },
+        {
+          "did": "camera_living",
+          "name": "客厅摄像头",
+          "room": "客厅"
+        },
+        {
+          "did": "vacuum",
+          "name": "扫地机器人",
+          "room": "客厅"
+        },
+        {
+          "did": "washer",
+          "name": "洗衣机",
+          "room": "卫生间"
+        },
+        {
+          "did": "dishwasher",
+          "name": "洗碗机",
+          "room": "厨房"
+        },
+        {
+          "did": "cooker",
+          "name": "电饭煲",
+          "room": "厨房"
+        },
+        {
+          "did": "microwave",
+          "name": "微波炉",
+          "room": "厨房"
+        },
+        {
+          "did": "toilet",
+          "name": "智能马桶盖",
+          "room": "卫生间"
+        },
+        {
+          "did": "tv",
+          "name": "电视",
+          "room": "客厅"
+        },
+        {
+          "did": "projector",
+          "name": "投影仪",
+          "room": "客厅"
+        },
+        {
+          "did": "speaker",
+          "name": "智能音箱",
+          "room": "客厅"
+        },
+        {
+          "did": "socket",
+          "name": "智能插座",
+          "room": "客厅"
+        }
+      ],
+      "message": "找到 40 个匹配 '' 的设备：\n  1. 🟢 客厅 客厅灯\n  2. 🟢 卧室 卧室灯\n  3. 🟢 卧室 床头灯\n  4. 🟢 阳台 阳台灯\n  5. 🟢 书房 书房灯\n  6. 🟢 厨房 厨房灯\n  7. 🟢 卫生间 卫生间灯\n  8. 🟢 餐厅 餐厅灯 (别名: 氛围灯)\n  9. 🟢 走廊 走廊灯 (别名: 夜灯)\n  10. 🟢 玄关 玄关灯\n  11. 🟢 客厅 灯带 (别名: 氛围灯带)\n  12. 🟢 客厅 地灯\n  13. 🟢 客厅 客厅空调 (别名: 空调)\n  14. 🟢 卧室 卧室空调\n  15. 🟢 主卧 主卧空调\n  16. 🟢 客厅 新风系统\n  17. 🟢 客厅 空气净化器\n  18. 🟢 卧室 加湿器\n  19. 🟢 客厅 电风扇\n  20. 🟢 客厅 地暖\n  21. 🟢 卫生间 热水器\n  22. 🟢 客厅 除湿机\n  23. 🟢 厨房 抽油烟机\n  24. 🟢 客厅 客厅窗帘 (别名: 窗帘)\n  25. 🟢 卧室 卧室窗帘 (别名: 卧室纱帘)\n  26. 🟢 阳台 阳台窗帘\n  27. 🟢 阳台 晾衣架\n  28. 🟢 玄关 智能门锁 (别名: 门锁)\n  29. 🟢 门口 门口监控 (别名: 门口摄像头)\n  30. 🟢 客厅 客厅摄像头 (别名: 摄像头)\n  31. 🟢 客厅 扫地机器人 (别名: 扫地机)\n  32. 🟢 卫生间 洗衣机\n  33. 🟢 厨房 洗碗机\n  34. 🟢 厨房 电饭煲\n  35. 🟢 厨房 微波炉\n  36. 🟢 卫生间 智能马桶盖 (别名: 马桶盖)\n  37. 🟢 客厅 电视\n  38. 🟢 客厅 投影仪\n  39. 🟢 客厅 智能音箱 (别名: 音箱)\n  40. 🟢 客厅 智能插座 (别名: 插座)\n请用房间名+设备名精确指定，如 '卧室灯'"
+    },
+    "parsed": {
+      "device": "",
+      "action": "set_prop",
+      "prop": "湿度",
+      "value": 100,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "ambiguous_device",
+    "flags": [
+      "percent_expr"
+    ]
+  },
+  {
+    "index": 38,
+    "input": "打开电风扇",
+    "normalized": "打开电风扇",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "电风扇",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "fan",
+          "name": "电风扇",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "电风扇",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 39,
+    "input": "关闭电风扇",
+    "normalized": "关闭电风扇",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "电风扇",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "fan",
+          "name": "电风扇",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "电风扇",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 40,
+    "input": "风扇调成摇头模式",
+    "normalized": "风扇调成摇头模式",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 41,
+    "input": "把风扇风速调高一档",
+    "normalized": "风扇风速调高一档",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "风扇",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "fan",
+          "name": "电风扇",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "风扇",
+      "action": "adjust_prop",
+      "prop": "风速",
+      "value": null,
+      "unit": "",
+      "direction": 1,
+      "delta": 1.0
+    },
+    "plan": "读 'Fan Level' 当前值 → 方向1 步长/幅度1.0 → clamp[1, 4, 1] → 写回",
+    "verdict": "adjust_ok",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 42,
+    "input": "打开地暖",
+    "normalized": "打开地暖",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "地暖",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "heater",
+          "name": "地暖",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "地暖",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 43,
+    "input": "关闭地暖",
+    "normalized": "关闭地暖",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "地暖",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "heater",
+          "name": "地暖",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "地暖",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 44,
+    "input": "地暖温度调到二十四度",
+    "normalized": "地暖温度调到二十四度",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "地暖",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "heater",
+          "name": "地暖",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "地暖",
+      "action": "set_prop",
+      "prop": "温度",
+      "value": 24,
+      "unit": "度",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "control_device(siid=2, piid=2, Target Temperature=24度)",
+    "verdict": "control_ok",
+    "flags": []
+  },
+  {
+    "index": 45,
+    "input": "打开热水器",
+    "normalized": "打开热水器",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "热水器",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "water_heater",
+          "name": "热水器",
+          "room": "卫生间"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "热水器",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 46,
+    "input": "关闭热水器",
+    "normalized": "关闭热水器",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "热水器",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "water_heater",
+          "name": "热水器",
+          "room": "卫生间"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "热水器",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 47,
+    "input": "热水器温度调到四十五度",
+    "normalized": "热水器温度调到四十五度",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "热水器",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "water_heater",
+          "name": "热水器",
+          "room": "卫生间"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "热水器",
+      "action": "set_prop",
+      "prop": "温度",
+      "value": 45,
+      "unit": "度",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "control_device(siid=2, piid=2, Target Temperature=45度)",
+    "verdict": "control_ok",
+    "flags": []
+  },
+  {
+    "index": 48,
+    "input": "打开窗帘",
+    "normalized": "打开窗帘",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "窗帘",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "curtain_living",
+          "name": "客厅窗帘",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "窗帘",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 49,
+    "input": "关闭窗帘",
+    "normalized": "关闭窗帘",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "窗帘",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "curtain_living",
+          "name": "客厅窗帘",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "窗帘",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 50,
+    "input": "窗帘拉开一半",
+    "normalized": "窗帘拉开一半",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 51,
+    "input": "把窗帘拉到百分之三十",
+    "normalized": "窗帘拉到百分之三十",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 52,
+    "input": "打开卧室纱帘",
+    "normalized": "打开卧室纱帘",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "卧室纱帘",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "curtain_bedroom",
+          "name": "卧室窗帘",
+          "room": "卧室"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "卧室纱帘",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 53,
+    "input": "关闭客厅窗帘",
+    "normalized": "关闭客厅窗帘",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "客厅窗帘",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "curtain_living",
+          "name": "客厅窗帘",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "客厅窗帘",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 54,
+    "input": "打开阳台窗帘",
+    "normalized": "打开阳台窗帘",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "阳台窗帘",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "curtain_balcony",
+          "name": "阳台窗帘",
+          "room": "阳台"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "阳台窗帘",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 55,
+    "input": "把窗帘全部拉开",
+    "normalized": "窗帘全部拉开",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 56,
+    "input": "打开智能门锁",
+    "normalized": "打开智能门锁",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "智能门锁",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "lock",
+          "name": "智能门锁",
+          "room": "玄关"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "智能门锁",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "无可写 bool 开关属性、无电源动作 → 报错",
+    "verdict": "switch_no_switchable_prop",
+    "flags": []
+  },
+  {
+    "index": 57,
+    "input": "反锁大门",
+    "normalized": "反锁大门",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 58,
+    "input": "查询门锁状态",
+    "normalized": "查询门锁状态",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 59,
+    "input": "今天家里有人开门吗",
+    "normalized": "今天家里有人开门吗",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 60,
+    "input": "开启离家模式",
+    "normalized": "开启离家模式",
+    "scene_shortcut": "离家",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "离家",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'离家')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 61,
+    "input": "开启回家模式",
+    "normalized": "开启回家模式",
+    "scene_shortcut": "回家",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "回家",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'回家')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 62,
+    "input": "开启睡眠模式",
+    "normalized": "开启睡眠模式",
+    "scene_shortcut": "睡眠",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "睡眠",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'睡眠')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 63,
+    "input": "开启起床模式",
+    "normalized": "开启起床模式",
+    "scene_shortcut": "起床",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "起床",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'起床')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 64,
+    "input": "开启观影模式",
+    "normalized": "开启观影模式",
+    "scene_shortcut": "观影",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "观影",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'观影')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 65,
+    "input": "开启就餐模式",
+    "normalized": "开启就餐模式",
+    "scene_shortcut": "就餐",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "就餐",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'就餐')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 66,
+    "input": "开启阅读模式",
+    "normalized": "开启阅读模式",
+    "scene_shortcut": "阅读",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "阅读",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'阅读')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 67,
+    "input": "开启会客模式",
+    "normalized": "开启会客模式",
+    "scene_shortcut": "会客",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "会客",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'会客')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 68,
+    "input": "开启通风模式",
+    "normalized": "开启通风模式",
+    "scene_shortcut": "通风",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "通风",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'通风')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 69,
+    "input": "开启节能模式",
+    "normalized": "开启节能模式",
+    "scene_shortcut": "节能",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "节能",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'节能')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 70,
+    "input": "开启全屋布防",
+    "normalized": "开启全屋布防",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "全屋布防",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '全屋布防' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "全屋布防",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "switch_device_missing",
+    "flags": []
+  },
+  {
+    "index": 71,
+    "input": "解除全屋布防",
+    "normalized": "解除全屋布防",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 72,
+    "input": "打开门口监控",
+    "normalized": "打开门口监控",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "门口监控",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "camera_door",
+          "name": "门口监控",
+          "room": "门口"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "门口监控",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 73,
+    "input": "查看客厅摄像头画面",
+    "normalized": "查看客厅摄像头画面",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 74,
+    "input": "查看门口实时画面",
+    "normalized": "查看门口实时画面",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 75,
+    "input": "回放昨天的监控录像",
+    "normalized": "回放昨天的监控录像",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 76,
+    "input": "有人在门口吗",
+    "normalized": "有人在门口吗",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 77,
+    "input": "检测到异常立刻通知我",
+    "normalized": "检测到异常立刻通知我",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 78,
+    "input": "打开扫地机器人",
+    "normalized": "打开扫地机器人",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "扫地机器人",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "vacuum",
+          "name": "扫地机器人",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "扫地机器人",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 79,
+    "input": "让扫地机器人开始清扫",
+    "normalized": "让扫地机器人开始清扫",
+    "scene_shortcut": null,
+    "branch": "action",
+    "device_hint": "让扫地机器人",
+    "scene_name": "",
+    "verb": "开始",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "vacuum",
+          "name": "扫地机器人",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": null,
+    "plan": "call_device_action(siid=2, aiid=1, 'Start Sweep')",
+    "verdict": "action_ok",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 80,
+    "input": "让扫地机器人去扫卧室",
+    "normalized": "让扫地机器人去扫卧室",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 81,
+    "input": "让扫地机器人回充",
+    "normalized": "让扫地机器人回充",
+    "scene_shortcut": null,
+    "branch": "action",
+    "device_hint": "让扫地机器人",
+    "scene_name": "",
+    "verb": "回充",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "vacuum",
+          "name": "扫地机器人",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": null,
+    "plan": "动作'回充'无对应 action（设备可用：['Start Sweep', 'Pause Sweeping', 'Stop Sweeping', 'Start Charge']）",
+    "verdict": "action_no_matching_action",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 82,
+    "input": "暂停清扫",
+    "normalized": "暂停清扫",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 83,
+    "input": "让扫地机器人只扫客厅",
+    "normalized": "让扫地机器人只扫客厅",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 84,
+    "input": "启动全屋清扫",
+    "normalized": "启动全屋清扫",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 85,
+    "input": "打开洗衣机",
+    "normalized": "打开洗衣机",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "洗衣机",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "washer",
+          "name": "洗衣机",
+          "room": "卫生间"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "洗衣机",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 86,
+    "input": "洗衣机开始洗衣服",
+    "normalized": "洗衣机开始洗衣服",
+    "scene_shortcut": null,
+    "branch": "action",
+    "device_hint": "洗衣机",
+    "scene_name": "",
+    "verb": "开始",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "washer",
+          "name": "洗衣机",
+          "room": "卫生间"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": null,
+    "plan": "动作'开始'无对应 action（设备可用：无）",
+    "verdict": "action_no_matching_action",
+    "flags": []
+  },
+  {
+    "index": 87,
+    "input": "洗衣机还剩多长时间",
+    "normalized": "洗衣机还剩多长时间",
+    "scene_shortcut": null,
+    "branch": "query",
+    "device_hint": "洗衣机",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "washer",
+          "name": "洗衣机",
+          "room": "卫生间"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": null,
+    "plan": "query_device_state('洗衣机') → 读 洗衣机 的 3 个可读属性",
+    "verdict": "query_ok",
+    "flags": []
+  },
+  {
+    "index": 88,
+    "input": "洗衣机洗完了吗",
+    "normalized": "洗衣机洗完了吗",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 89,
+    "input": "启动洗碗机",
+    "normalized": "启动洗碗机",
+    "scene_shortcut": null,
+    "branch": "action",
+    "device_hint": "洗碗机",
+    "scene_name": "",
+    "verb": "启动",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "dishwasher",
+          "name": "洗碗机",
+          "room": "厨房"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": null,
+    "plan": "动作'启动'无对应 action（设备可用：无）",
+    "verdict": "action_no_matching_action",
+    "flags": []
+  },
+  {
+    "index": 90,
+    "input": "关闭洗碗机",
+    "normalized": "关闭洗碗机",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "洗碗机",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "dishwasher",
+          "name": "洗碗机",
+          "room": "厨房"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "洗碗机",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 91,
+    "input": "打开电饭煲",
+    "normalized": "打开电饭煲",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "电饭煲",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "cooker",
+          "name": "电饭煲",
+          "room": "厨房"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "电饭煲",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 92,
+    "input": "电饭煲开始煮饭",
+    "normalized": "电饭煲开始煮饭",
+    "scene_shortcut": null,
+    "branch": "action",
+    "device_hint": "电饭煲",
+    "scene_name": "",
+    "verb": "开始",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "cooker",
+          "name": "电饭煲",
+          "room": "厨房"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": null,
+    "plan": "动作'开始'无对应 action（设备可用：无）",
+    "verdict": "action_no_matching_action",
+    "flags": []
+  },
+  {
+    "index": 93,
+    "input": "让电饭煲保温",
+    "normalized": "让电饭煲保温",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 94,
+    "input": "打开微波炉",
+    "normalized": "打开微波炉",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "微波炉",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "microwave",
+          "name": "微波炉",
+          "room": "厨房"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "微波炉",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 95,
+    "input": "微波炉加热三分钟",
+    "normalized": "微波炉加热三分钟",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 96,
+    "input": "打开电视",
+    "normalized": "打开电视",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "电视",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "tv",
+          "name": "电视",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "电视",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 97,
+    "input": "关闭电视",
+    "normalized": "关闭电视",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "电视",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "tv",
+          "name": "电视",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "电视",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 98,
+    "input": "把电视调到央视一套",
+    "normalized": "电视调到央视一套",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "电视",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "tv",
+          "name": "电视",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "电视",
+      "action": "set_prop",
+      "prop": "亮度",
+      "value": 1,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "找不到属性'亮度'（设备无可写属性匹配该关键词）→ 报错列可用属性",
+    "verdict": "control_prop_missing",
+    "flags": []
+  },
+  {
+    "index": 99,
+    "input": "音量调大一点",
+    "normalized": "音量调大一点",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 100,
+    "input": "音量调小一点",
+    "normalized": "音量调小一点",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 101,
+    "input": "把音量调到百分之三十",
+    "normalized": "音量调到百分之三十",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ambiguous",
+      "devices": [
+        {
+          "did": "light_living",
+          "name": "客厅灯",
+          "room": "客厅"
+        },
+        {
+          "did": "light_bedroom",
+          "name": "卧室灯",
+          "room": "卧室"
+        },
+        {
+          "did": "light_bedside",
+          "name": "床头灯",
+          "room": "卧室"
+        },
+        {
+          "did": "light_balcony",
+          "name": "阳台灯",
+          "room": "阳台"
+        },
+        {
+          "did": "light_study",
+          "name": "书房灯",
+          "room": "书房"
+        },
+        {
+          "did": "light_kitchen",
+          "name": "厨房灯",
+          "room": "厨房"
+        },
+        {
+          "did": "light_bath",
+          "name": "卫生间灯",
+          "room": "卫生间"
+        },
+        {
+          "did": "light_dining",
+          "name": "餐厅灯",
+          "room": "餐厅"
+        },
+        {
+          "did": "light_corridor",
+          "name": "走廊灯",
+          "room": "走廊"
+        },
+        {
+          "did": "light_entry",
+          "name": "玄关灯",
+          "room": "玄关"
+        },
+        {
+          "did": "light_strip",
+          "name": "灯带",
+          "room": "客厅"
+        },
+        {
+          "did": "light_floor",
+          "name": "地灯",
+          "room": "客厅"
+        },
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        },
+        {
+          "did": "ac_bedroom",
+          "name": "卧室空调",
+          "room": "卧室"
+        },
+        {
+          "did": "ac_master",
+          "name": "主卧空调",
+          "room": "主卧"
+        },
+        {
+          "did": "fresh_air",
+          "name": "新风系统",
+          "room": "客厅"
+        },
+        {
+          "did": "purifier",
+          "name": "空气净化器",
+          "room": "客厅"
+        },
+        {
+          "did": "humidifier",
+          "name": "加湿器",
+          "room": "卧室"
+        },
+        {
+          "did": "fan",
+          "name": "电风扇",
+          "room": "客厅"
+        },
+        {
+          "did": "heater",
+          "name": "地暖",
+          "room": "客厅"
+        },
+        {
+          "did": "water_heater",
+          "name": "热水器",
+          "room": "卫生间"
+        },
+        {
+          "did": "dehumidifier",
+          "name": "除湿机",
+          "room": "客厅"
+        },
+        {
+          "did": "hood",
+          "name": "抽油烟机",
+          "room": "厨房"
+        },
+        {
+          "did": "curtain_living",
+          "name": "客厅窗帘",
+          "room": "客厅"
+        },
+        {
+          "did": "curtain_bedroom",
+          "name": "卧室窗帘",
+          "room": "卧室"
+        },
+        {
+          "did": "curtain_balcony",
+          "name": "阳台窗帘",
+          "room": "阳台"
+        },
+        {
+          "did": "rack",
+          "name": "晾衣架",
+          "room": "阳台"
+        },
+        {
+          "did": "lock",
+          "name": "智能门锁",
+          "room": "玄关"
+        },
+        {
+          "did": "camera_door",
+          "name": "门口监控",
+          "room": "门口"
+        },
+        {
+          "did": "camera_living",
+          "name": "客厅摄像头",
+          "room": "客厅"
+        },
+        {
+          "did": "vacuum",
+          "name": "扫地机器人",
+          "room": "客厅"
+        },
+        {
+          "did": "washer",
+          "name": "洗衣机",
+          "room": "卫生间"
+        },
+        {
+          "did": "dishwasher",
+          "name": "洗碗机",
+          "room": "厨房"
+        },
+        {
+          "did": "cooker",
+          "name": "电饭煲",
+          "room": "厨房"
+        },
+        {
+          "did": "microwave",
+          "name": "微波炉",
+          "room": "厨房"
+        },
+        {
+          "did": "toilet",
+          "name": "智能马桶盖",
+          "room": "卫生间"
+        },
+        {
+          "did": "tv",
+          "name": "电视",
+          "room": "客厅"
+        },
+        {
+          "did": "projector",
+          "name": "投影仪",
+          "room": "客厅"
+        },
+        {
+          "did": "speaker",
+          "name": "智能音箱",
+          "room": "客厅"
+        },
+        {
+          "did": "socket",
+          "name": "智能插座",
+          "room": "客厅"
+        }
+      ],
+      "message": "找到 40 个匹配 '' 的设备：\n  1. 🟢 客厅 客厅灯\n  2. 🟢 卧室 卧室灯\n  3. 🟢 卧室 床头灯\n  4. 🟢 阳台 阳台灯\n  5. 🟢 书房 书房灯\n  6. 🟢 厨房 厨房灯\n  7. 🟢 卫生间 卫生间灯\n  8. 🟢 餐厅 餐厅灯 (别名: 氛围灯)\n  9. 🟢 走廊 走廊灯 (别名: 夜灯)\n  10. 🟢 玄关 玄关灯\n  11. 🟢 客厅 灯带 (别名: 氛围灯带)\n  12. 🟢 客厅 地灯\n  13. 🟢 客厅 客厅空调 (别名: 空调)\n  14. 🟢 卧室 卧室空调\n  15. 🟢 主卧 主卧空调\n  16. 🟢 客厅 新风系统\n  17. 🟢 客厅 空气净化器\n  18. 🟢 卧室 加湿器\n  19. 🟢 客厅 电风扇\n  20. 🟢 客厅 地暖\n  21. 🟢 卫生间 热水器\n  22. 🟢 客厅 除湿机\n  23. 🟢 厨房 抽油烟机\n  24. 🟢 客厅 客厅窗帘 (别名: 窗帘)\n  25. 🟢 卧室 卧室窗帘 (别名: 卧室纱帘)\n  26. 🟢 阳台 阳台窗帘\n  27. 🟢 阳台 晾衣架\n  28. 🟢 玄关 智能门锁 (别名: 门锁)\n  29. 🟢 门口 门口监控 (别名: 门口摄像头)\n  30. 🟢 客厅 客厅摄像头 (别名: 摄像头)\n  31. 🟢 客厅 扫地机器人 (别名: 扫地机)\n  32. 🟢 卫生间 洗衣机\n  33. 🟢 厨房 洗碗机\n  34. 🟢 厨房 电饭煲\n  35. 🟢 厨房 微波炉\n  36. 🟢 卫生间 智能马桶盖 (别名: 马桶盖)\n  37. 🟢 客厅 电视\n  38. 🟢 客厅 投影仪\n  39. 🟢 客厅 智能音箱 (别名: 音箱)\n  40. 🟢 客厅 智能插座 (别名: 插座)\n请用房间名+设备名精确指定，如 '卧室灯'"
+    },
+    "parsed": {
+      "device": "",
+      "action": "set_prop",
+      "prop": "音量",
+      "value": 100,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "ambiguous_device",
+    "flags": [
+      "percent_expr"
+    ]
+  },
+  {
+    "index": 102,
+    "input": "静音",
+    "normalized": "静音",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 103,
+    "input": "打开音乐",
+    "normalized": "打开音乐",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "音乐",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '音乐' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "音乐",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "switch_device_missing",
+    "flags": []
+  },
+  {
+    "index": 104,
+    "input": "播放我喜欢的歌单",
+    "normalized": "播放我喜欢的歌单",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 105,
+    "input": "下一首",
+    "normalized": "下一首",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 106,
+    "input": "上一首",
+    "normalized": "上一首",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 107,
+    "input": "暂停播放",
+    "normalized": "暂停播放",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 108,
+    "input": "继续播放",
+    "normalized": "继续播放",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 109,
+    "input": "把音乐调到最大声",
+    "normalized": "音乐调到最大声",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "音乐",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '音乐' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "音乐",
+      "action": "set_prop",
+      "prop": "音量",
+      "value": "max",
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "control_device_missing",
+    "flags": []
+  },
+  {
+    "index": 110,
+    "input": "播放白噪音",
+    "normalized": "播放白噪音",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 111,
+    "input": "播放助眠音乐",
+    "normalized": "播放助眠音乐",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 112,
+    "input": "打开智能音箱",
+    "normalized": "打开智能音箱",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "智能音箱",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "speaker",
+          "name": "智能音箱",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "智能音箱",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 113,
+    "input": "关闭智能音箱",
+    "normalized": "关闭智能音箱",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "智能音箱",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "speaker",
+          "name": "智能音箱",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "智能音箱",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 114,
+    "input": "设置一个十分钟的闹钟",
+    "normalized": "设置一个十分钟的闹钟",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 115,
+    "input": "取消闹钟",
+    "normalized": "取消闹钟",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 116,
+    "input": "明早七点叫我起床",
+    "normalized": "明早七点叫我起床",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 117,
+    "input": "今晚十一点提醒我睡觉",
+    "normalized": "今晚十一点提醒我睡觉",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 118,
+    "input": "明天下午三点提醒我开会",
+    "normalized": "明天下午三点提醒我开会",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 119,
+    "input": "帮我定个明天早上八点的闹钟",
+    "normalized": "定个明天早上八点的闹钟",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 120,
+    "input": "现在几点了",
+    "normalized": "现在几点了",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 121,
+    "input": "今天是几号",
+    "normalized": "今天是几号",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 122,
+    "input": "明天天气怎么样",
+    "normalized": "明天天气怎么样",
+    "scene_shortcut": null,
+    "branch": "query",
+    "device_hint": "明天天气",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '明天天气' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": null,
+    "plan": "query_device_state('明天天气') → 设备未匹配",
+    "verdict": "query_device_missing",
+    "flags": []
+  },
+  {
+    "index": 123,
+    "input": "今天温度是多少",
+    "normalized": "今天温度是多少",
+    "scene_shortcut": null,
+    "branch": "query",
+    "device_hint": "今天",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "温度",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '今天' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": null,
+    "plan": "query_device_state('今天') → 设备未匹配",
+    "verdict": "query_device_missing",
+    "flags": []
+  },
+  {
+    "index": 124,
+    "input": "明天会下雨吗",
+    "normalized": "明天会下雨吗",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 125,
+    "input": "本周天气如何",
+    "normalized": "本周天气如何",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 126,
+    "input": "查询空气质量",
+    "normalized": "查询空气质量",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 127,
+    "input": "当前室内温度是多少",
+    "normalized": "当前室内温度是多少",
+    "scene_shortcut": null,
+    "branch": "query",
+    "device_hint": "当前室内",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "温度",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '当前室内' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": null,
+    "plan": "query_device_state('当前室内') → 设备未匹配",
+    "verdict": "query_device_missing",
+    "flags": []
+  },
+  {
+    "index": 128,
+    "input": "当前室内湿度是多少",
+    "normalized": "当前室内湿度是多少",
+    "scene_shortcut": null,
+    "branch": "query",
+    "device_hint": "当前室内",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "湿度",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '当前室内' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": null,
+    "plan": "query_device_state('当前室内') → 设备未匹配",
+    "verdict": "query_device_missing",
+    "flags": []
+  },
+  {
+    "index": 129,
+    "input": "现在室内二氧化碳浓度是多少",
+    "normalized": "现在室内二氧化碳浓度是多少",
+    "scene_shortcut": null,
+    "branch": "query",
+    "device_hint": "现在室内二氧化碳",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "浓度",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '现在室内二氧化碳' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": null,
+    "plan": "query_device_state('现在室内二氧化碳') → 设备未匹配",
+    "verdict": "query_device_missing",
+    "flags": []
+  },
+  {
+    "index": 130,
+    "input": "帮我查一下明天的出行路况",
+    "normalized": "查一下明天的出行路况",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 131,
+    "input": "播放今天的新闻",
+    "normalized": "播放今天的新闻",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 132,
+    "input": "播放天气预报",
+    "normalized": "播放天气预报",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 133,
+    "input": "查询日历",
+    "normalized": "查询日历",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 134,
+    "input": "今天有什么安排",
+    "normalized": "今天有什么安排",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 135,
+    "input": "帮我记个备忘",
+    "normalized": "记个备忘",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 136,
+    "input": "明天下午两点有个会议",
+    "normalized": "明天下午两点有个会议",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 137,
+    "input": "提醒我晚上八点吃药",
+    "normalized": "提醒我晚上八点吃药",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 138,
+    "input": "打开厨房抽油烟机",
+    "normalized": "打开厨房抽油烟机",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "厨房抽油烟机",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "hood",
+          "name": "抽油烟机",
+          "room": "厨房"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "厨房抽油烟机",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 139,
+    "input": "关闭抽油烟机",
+    "normalized": "关闭抽油烟机",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "抽油烟机",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "hood",
+          "name": "抽油烟机",
+          "room": "厨房"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "抽油烟机",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 140,
+    "input": "打开阳台灯",
+    "normalized": "打开阳台灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "阳台灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_balcony",
+          "name": "阳台灯",
+          "room": "阳台"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "阳台灯",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 141,
+    "input": "把客厅窗帘拉开",
+    "normalized": "客厅窗帘拉开",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 142,
+    "input": "把书房灯关掉",
+    "normalized": "书房灯关掉",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "书房灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_study",
+          "name": "书房灯",
+          "room": "书房"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "书房灯",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 143,
+    "input": "开启离家模式并关闭所有电器",
+    "normalized": "开启离家模式并关闭所有电器",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "离家模式并关闭所有电器",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '离家模式并关闭所有电器' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "离家模式并关闭所有电器",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "switch_device_missing",
+    "flags": []
+  },
+  {
+    "index": 144,
+    "input": "我出门了",
+    "normalized": "我出门了",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 145,
+    "input": "我回来了",
+    "normalized": "我回来了",
+    "scene_shortcut": "回家",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "回家",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'回家')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 146,
+    "input": "打开玄关灯",
+    "normalized": "打开玄关灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "玄关灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_entry",
+          "name": "玄关灯",
+          "room": "玄关"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "玄关灯",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 147,
+    "input": "关闭玄关灯",
+    "normalized": "关闭玄关灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "玄关灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_entry",
+          "name": "玄关灯",
+          "room": "玄关"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "玄关灯",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 148,
+    "input": "调暗床头灯",
+    "normalized": "调暗床头灯",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 149,
+    "input": "把电视声音调大",
+    "normalized": "电视声音调大",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 150,
+    "input": "切换电视频道",
+    "normalized": "切换电视频道",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 151,
+    "input": "播放电影频道",
+    "normalized": "播放电影频道",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 152,
+    "input": "打开投影仪",
+    "normalized": "打开投影仪",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "投影仪",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "projector",
+          "name": "投影仪",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "投影仪",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 153,
+    "input": "关闭投影仪",
+    "normalized": "关闭投影仪",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "投影仪",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "projector",
+          "name": "投影仪",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "投影仪",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 154,
+    "input": "投影仪切换到 HDMI 信号",
+    "normalized": "投影仪切换到 HDMI 信号",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 155,
+    "input": "打开游戏模式",
+    "normalized": "打开游戏模式",
+    "scene_shortcut": "游戏",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "游戏",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'游戏')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 156,
+    "input": "把窗帘关上一半",
+    "normalized": "窗帘关上一半",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 157,
+    "input": "打开夜灯",
+    "normalized": "打开夜灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "夜灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_corridor",
+          "name": "走廊灯",
+          "room": "走廊"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "夜灯",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 158,
+    "input": "关闭夜灯",
+    "normalized": "关闭夜灯",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "夜灯",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "light_corridor",
+          "name": "走廊灯",
+          "room": "走廊"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "夜灯",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 159,
+    "input": "全屋灯光调到最暗",
+    "normalized": "全屋灯光调到最暗",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "全屋灯光",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '全屋灯光' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "全屋灯光",
+      "action": "set_prop",
+      "prop": "亮度",
+      "value": "min",
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "control_device_missing",
+    "flags": []
+  },
+  {
+    "index": 160,
+    "input": "开启节日灯光模式",
+    "normalized": "开启节日灯光模式",
+    "scene_shortcut": "节日灯光",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "节日灯光",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'节日灯光')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 161,
+    "input": "打开阳台的晾衣架",
+    "normalized": "打开阳台的晾衣架",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "阳台的晾衣架",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "rack",
+          "name": "晾衣架",
+          "room": "阳台"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "阳台的晾衣架",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 162,
+    "input": "把晾衣架降下来",
+    "normalized": "晾衣架降下来",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 163,
+    "input": "晾衣架升起",
+    "normalized": "晾衣架升起",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 164,
+    "input": "打开智能马桶盖",
+    "normalized": "打开智能马桶盖",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "智能马桶盖",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "toilet",
+          "name": "智能马桶盖",
+          "room": "卫生间"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "智能马桶盖",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 165,
+    "input": "关闭马桶盖",
+    "normalized": "关闭马桶盖",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "马桶盖",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "toilet",
+          "name": "智能马桶盖",
+          "room": "卫生间"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "马桶盖",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 166,
+    "input": "马桶开始冲洗",
+    "normalized": "马桶开始冲洗",
+    "scene_shortcut": null,
+    "branch": "action",
+    "device_hint": "马桶",
+    "scene_name": "",
+    "verb": "开始",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "toilet",
+          "name": "智能马桶盖",
+          "room": "卫生间"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": null,
+    "plan": "动作'开始'无对应 action（设备可用：['Flush']）",
+    "verdict": "action_no_matching_action",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 167,
+    "input": "打开智能晾衣架的烘干功能",
+    "normalized": "打开智能晾衣架的烘干功能",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "智能晾衣架的烘干功能",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "rack",
+          "name": "晾衣架",
+          "room": "阳台"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "智能晾衣架的烘干功能",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": [
+      "fuzzy_hint"
+    ]
+  },
+  {
+    "index": 168,
+    "input": "启动除螨模式",
+    "normalized": "启动除螨模式",
+    "scene_shortcut": "除螨",
+    "branch": "scene",
+    "device_hint": "",
+    "scene_name": "除螨",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "execute_scene(name≈'除螨')",
+    "verdict": "scene_execute",
+    "flags": []
+  },
+  {
+    "index": 169,
+    "input": "打开除湿机",
+    "normalized": "打开除湿机",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "除湿机",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "dehumidifier",
+          "name": "除湿机",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "除湿机",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 170,
+    "input": "关闭除湿机",
+    "normalized": "关闭除湿机",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "除湿机",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "dehumidifier",
+          "name": "除湿机",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "除湿机",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 171,
+    "input": "查询本周用电量",
+    "normalized": "查询本周用电量",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 172,
+    "input": "查询今天用电量",
+    "normalized": "查询今天用电量",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 173,
+    "input": "关闭所有待机电器",
+    "normalized": "关闭所有待机电器",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "所有待机电器",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '所有待机电器' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "所有待机电器",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "switch_device_missing",
+    "flags": []
+  },
+  {
+    "index": 174,
+    "input": "打开智能插座",
+    "normalized": "打开智能插座",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "智能插座",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "socket",
+          "name": "智能插座",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "智能插座",
+      "action": "switch",
+      "prop": null,
+      "value": true,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 175,
+    "input": "关闭智能插座",
+    "normalized": "关闭智能插座",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "智能插座",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ok",
+      "devices": [
+        {
+          "did": "socket",
+          "name": "智能插座",
+          "room": "客厅"
+        }
+      ],
+      "message": ""
+    },
+    "parsed": {
+      "device": "智能插座",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "写开关属性 ['Power'] → 写后回读校验",
+    "verdict": "switch_via_property",
+    "flags": []
+  },
+  {
+    "index": 176,
+    "input": "启动语音播报",
+    "normalized": "启动语音播报",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 177,
+    "input": "关闭语音播报",
+    "normalized": "关闭语音播报",
+    "scene_shortcut": null,
+    "branch": "switch",
+    "device_hint": "语音播报",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '语音播报' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "语音播报",
+      "action": "switch",
+      "prop": null,
+      "value": false,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "switch_device_missing",
+    "flags": []
+  },
+  {
+    "index": 178,
+    "input": "把语音助手音量调大",
+    "normalized": "语音助手音量调大",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "语音助手",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '语音助手' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": {
+      "device": "语音助手",
+      "action": "adjust_prop",
+      "prop": "音量",
+      "value": null,
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "control_device_missing",
+    "flags": []
+  },
+  {
+    "index": 179,
+    "input": "把语音助手声音换成温柔一点的",
+    "normalized": "语音助手声音换成温柔一点的",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 180,
+    "input": "开始连续对话",
+    "normalized": "开始连续对话",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 181,
+    "input": "停止连续对话",
+    "normalized": "停止连续对话",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 182,
+    "input": "今天的水电费是多少",
+    "normalized": "今天的水电费是多少",
+    "scene_shortcut": null,
+    "branch": "query",
+    "device_hint": "今天的水电费",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "not_found",
+      "devices": [],
+      "message": "未找到匹配 '今天的水电费' 的设备。当前设备列表：\n  • 客厅 客厅灯\n  • 卧室 卧室灯\n  • 卧室 床头灯\n  • 阳台 阳台灯\n  • 书房 书房灯\n  • 厨房 厨房灯\n  • 卫生间 卫生间灯\n  • 餐厅 餐厅灯 (别名: 氛围灯)\n  • 走廊 走廊灯 (别名: 夜灯)\n  • 玄关 玄关灯\n  • 客厅 灯带 (别名: 氛围灯带)\n  • 客厅 地灯\n  • 客厅 客厅空调 (别名: 空调)\n  • 卧室 卧室空调\n  • 主卧 主卧空调\n  • 客厅 新风系统\n  • 客厅 空气净化器\n  • 卧室 加湿器\n  • 客厅 电风扇\n  • 客厅 地暖\n  • 卫生间 热水器\n  • 客厅 除湿机\n  • 厨房 抽油烟机\n  • 客厅 客厅窗帘 (别名: 窗帘)\n  • 卧室 卧室窗帘 (别名: 卧室纱帘)\n  • 阳台 阳台窗帘\n  • 阳台 晾衣架\n  • 玄关 智能门锁 (别名: 门锁)\n  • 门口 门口监控 (别名: 门口摄像头)\n  • 客厅 客厅摄像头 (别名: 摄像头)\n  • 客厅 扫地机器人 (别名: 扫地机)\n  • 卫生间 洗衣机\n  • 厨房 洗碗机\n  • 厨房 电饭煲\n  • 厨房 微波炉\n  • 卫生间 智能马桶盖 (别名: 马桶盖)\n  • 客厅 电视\n  • 客厅 投影仪\n  • 客厅 智能音箱 (别名: 音箱)\n  • 客厅 智能插座 (别名: 插座)"
+    },
+    "parsed": null,
+    "plan": "query_device_state('今天的水电费') → 设备未匹配",
+    "verdict": "query_device_missing",
+    "flags": []
+  },
+  {
+    "index": 183,
+    "input": "帮我缴一下水电费",
+    "normalized": "缴一下水电费",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 184,
+    "input": "连接蓝牙音箱",
+    "normalized": "连接蓝牙音箱",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 185,
+    "input": "断开蓝牙连接",
+    "normalized": "断开蓝牙连接",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 186,
+    "input": "升级智能家居系统",
+    "normalized": "升级智能家居系统",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 187,
+    "input": "重启网关",
+    "normalized": "重启网关",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 188,
+    "input": "检查所有设备状态",
+    "normalized": "检查所有设备状态",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 189,
+    "input": "所有设备都正常吗",
+    "normalized": "所有设备都正常吗",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 190,
+    "input": "有哪些设备离线了",
+    "normalized": "有哪些设备离线了",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  },
+  {
+    "index": 191,
+    "input": "把客厅温度调到舒适模式",
+    "normalized": "客厅温度调到舒适模式",
+    "scene_shortcut": null,
+    "branch": "control",
+    "device_hint": "客厅",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": {
+      "status": "ambiguous",
+      "devices": [
+        {
+          "did": "light_living",
+          "name": "客厅灯",
+          "room": "客厅"
+        },
+        {
+          "did": "ac_living",
+          "name": "客厅空调",
+          "room": "客厅"
+        },
+        {
+          "did": "curtain_living",
+          "name": "客厅窗帘",
+          "room": "客厅"
+        },
+        {
+          "did": "camera_living",
+          "name": "客厅摄像头",
+          "room": "客厅"
+        }
+      ],
+      "message": "找到 4 个匹配 '客厅' 的设备：\n  1. 🟢 客厅 客厅灯\n  2. 🟢 客厅 客厅空调 (别名: 空调)\n  3. 🟢 客厅 客厅窗帘 (别名: 窗帘)\n  4. 🟢 客厅 客厅摄像头 (别名: 摄像头)\n请用房间名+设备名精确指定，如 '卧室灯'"
+    },
+    "parsed": {
+      "device": "客厅",
+      "action": "set_prop",
+      "prop": "模式",
+      "value": "舒适",
+      "unit": "",
+      "direction": 1,
+      "delta": null
+    },
+    "plan": "设备未匹配 → Err 未找到设备",
+    "verdict": "ambiguous_device",
+    "flags": []
+  },
+  {
+    "index": 192,
+    "input": "今天在家适合开窗吗",
+    "normalized": "今天在家适合开窗吗",
+    "scene_shortcut": null,
+    "branch": "unknown",
+    "device_hint": "",
+    "scene_name": "",
+    "verb": "",
+    "query_prop": "",
+    "match": null,
+    "parsed": null,
+    "plan": "Err 无法理解命令（返回支持格式提示）",
+    "verdict": "unknown_intent",
+    "flags": []
+  }
+]

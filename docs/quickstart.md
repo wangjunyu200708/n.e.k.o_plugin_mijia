@@ -48,7 +48,7 @@
 
 如果您需要直接调用插件接口，以下是核心入口说明：
 
-- **`smart_control`** — 自然语言统一控制 (推荐)  
+- **`smart_control`** — 自然语言统一控制（**对话期工具 `@llm_tool`**：由 AI 伙伴在对话中自动调用；不是 `@plugin_entry`，不能用 `/runs` + entry_id 触发）  
   参数：`{ "command": "打开卧室灯" }`
 - **`list_devices`** — 获取设备列表  
   参数：`{ "home_id": "12345" }`
