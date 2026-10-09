@@ -1,35 +1,24 @@
-"""米家API SDK - 重构版本
+"""米家API SDK - 重构版本（N.E.K.O 插件内嵌）
 
-这是米家智能家居Python SDK的重构版本，采用分层架构设计。
+分层架构：core / domain / infrastructure / repositories / services / factory。
 
-核心特性：
-- 凭据与操作完全分离
-- 支持多用户并发场景
-- 清晰的分层架构（领域层、仓储层、服务层、基础设施层）
-- 完整的类型注解
-- 异步API支持
-- 智能缓存管理
-- 结构化日志系统
-
-基本使用：
-    from mijia_api import create_api_client
+用法：
+    from mijia_api import create_async_api_client
     from mijia_api.infrastructure.credential_provider import CredentialProvider
 
-    # 获取凭据
     provider = CredentialProvider()
-    credential = provider.login_by_qrcode()
+    credential = await provider.get_qrcode_async()   # 扫码登录（异步包装）
+    api = create_async_api_client(credential)
+    devices = await api.get_devices(home_id="your_home_id")
 
-    # 创建API客户端
-    api = create_api_client(credential)
-
-    # 获取设备列表
-    devices = api.get_devices(home_id="your_home_id")
+注：同步 API（MijiaAPI / create_api_client / create_multi_user_clients）已移除
+——插件宿主是 asyncio 事件循环，同步实现既用不上，又要跟着异步版双份维护。
 """
 
 __version__ = "2.0.1"
 __author__ = "MijiaAPI Contributors"
 
-from .api_client import AsyncMijiaAPI, MijiaAPI
+from .api_client import AsyncMijiaAPI
 from .domain.exceptions import (
     AuthenticationError,
     DeviceError,
@@ -46,11 +35,8 @@ from .domain.models import (
     Scene,
 )
 from .factory import (
-    create_api_client,
-    create_api_client_from_file,
     create_async_api_client,
     create_auth_service,
-    create_multi_user_clients,
 )
 
 __all__ = [
@@ -58,14 +44,10 @@ __all__ = [
     "__version__",
     "__author__",
     # API客户端
-    "MijiaAPI",
     "AsyncMijiaAPI",
     # 工厂函数
-    "create_api_client",
     "create_async_api_client",
     "create_auth_service",
-    "create_multi_user_clients",
-    "create_api_client_from_file",
     # 领域模型
     "Credential",
     "Device",

@@ -3,7 +3,7 @@
 提供技术基础设施组件，如HTTP客户端、缓存、加密、日志等。
 
 模块：
-- http_client: HTTP客户端（同步和异步）
+- http_client: HTTP客户端（异步）
 - cache_manager: 缓存管理器
 - redis_client: Redis客户端（可选，未实现）
 - crypto_service: 加密服务
@@ -18,11 +18,10 @@ from ..infrastructure.credential_store import (
     ICredentialStore,
 )
 from ..infrastructure.crypto_service import CryptoService
-from ..infrastructure.http_client import AsyncHttpClient, HttpClient
+from ..infrastructure.http_client import AsyncHttpClient
 
 __all__ = [
     # HTTP客户端
-    "HttpClient",
     "AsyncHttpClient",
     # 缓存管理
     "CacheManager",

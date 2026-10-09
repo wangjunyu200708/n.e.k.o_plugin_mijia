@@ -62,6 +62,22 @@ class CacheManager:
             "misses": 0,  # 完全未命中
         }
 
+    def close(self) -> None:
+        """释放缓存持有的外部资源（目前只有调用方注入的可选 Redis 客户端）。
+
+        幂等：关闭后置空引用，重复调用直接返回。L1 内存与 L3 文件无需释放。
+        """
+        client = self._redis_client
+        if client is None:
+            return
+        self._redis_client = None
+        close = getattr(client, "close", None)
+        if callable(close):
+            try:
+                close()
+            except Exception as exc:
+                logger.warning(f"关闭 Redis 客户端失败: {exc}")
+
     def get(self, key: str, namespace: str = "default") -> Optional[Any]:
         """获取缓存（多层查找）
 

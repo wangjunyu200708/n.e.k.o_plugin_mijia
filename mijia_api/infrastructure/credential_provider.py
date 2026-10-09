@@ -701,13 +701,25 @@ class CredentialProvider:
         # 否则使用默认过期时间
         return datetime.now() + timedelta(days=default_days)
 
-    def __del__(self) -> None:
-        """析构函数，关闭HTTP客户端"""
+    def close(self) -> None:
+        """关闭内部 httpx.Client，释放空闲连接。
+
+        幂等（httpx 允许重复 close）。此前只有 __del__ 兜底，而 __del__ 在解释器
+        退出期不保证被调用，插件 shutdown 又从不持有本对象，连接会一直挂到 GC。
+        现在由使用方显式调用（见 MijiaPlugin.on_shutdown）。
+        """
+        client = getattr(self, "_client", None)
+        if client is None:
+            return
         try:
-            self._client.close()
-        except Exception:
-            pass
-        
+            client.close()
+        except Exception as exc:
+            logger.warning(f"关闭凭据 HTTP 客户端失败: {exc}")
+
+    def __del__(self) -> None:
+        """析构兜底：显式 close() 没被调用时收尾。"""
+        self.close()
+
     async def get_qrcode_async(self) -> tuple[str, str]:
         """
         异步获取二维码登录信息，返回 (qr_url, login_url)

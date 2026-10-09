@@ -3,7 +3,6 @@
 支持口语变体：两=二=2；支持 十/百/千 组合（二十三→23）。
 """
 
-import re
 from typing import Optional
 
 _CN_DIGITS = {
@@ -13,8 +12,6 @@ _CN_DIGITS = {
     "六": 6, "七": 7, "八": 8, "九": 9,
 }
 _CN_UNITS = {"十": 10, "百": 100, "千": 1000}
-
-CN_NUM_RE = re.compile(r"[零〇一二两三四五六七八九十百千]+")
 
 
 def chinese_to_int(text: str) -> Optional[int]:

@@ -41,53 +41,6 @@ class IHomeRepository(ABC):
         pass
 
 
-class IDeviceRepository(ABC):
-    """设备仓储接口"""
-
-    @abstractmethod
-    def get_all(self, home_id: str, credential: Credential) -> List[Device]:
-        """获取家庭下所有设备"""
-        pass
-
-    @abstractmethod
-    def get_by_id(self, device_id: str, credential: Credential) -> Optional[Device]:
-        """根据ID获取设备"""
-        pass
-
-    @abstractmethod
-    def get_properties(self, device_id: str, credential: Credential) -> List[DeviceProperty]:
-        """获取设备属性"""
-        pass
-
-    @abstractmethod
-    def set_property(
-        self, device_id: str, siid: int, piid: int, value: Any, credential: Credential
-    ) -> bool:
-        """设置设备属性"""
-        pass
-
-    @abstractmethod
-    def call_action(
-        self, device_id: str, siid: int, aiid: int, params: List[Any], credential: Credential
-    ) -> Any:
-        """调用设备操作"""
-        pass
-
-    @abstractmethod
-    def batch_get_properties(
-        self, requests: List[Dict[str, Any]], credential: Credential
-    ) -> List[Dict[str, Any]]:
-        """批量获取属性"""
-        pass
-
-    @abstractmethod
-    def batch_set_properties(
-        self, requests: List[Dict[str, Any]], credential: Credential
-    ) -> List[Dict[str, Any]]:
-        """批量设置属性"""
-        pass
-
-
 class ISceneRepository(ABC):
     """智能仓储接口"""
 

@@ -43,7 +43,6 @@ def detect_scene(command: str) -> Optional[str]:
     return SCENE_PHRASE_MAP.get(cmd)
 
 # ── 开关指令（前缀动词）──
-SWITCH_VERBS = r"打开|开启|关闭|关掉|开|关"
 SWITCH_CMD_RE = re.compile(r"(?:打开|开启|关闭|关掉|开|关)\s*\S")
 # 动作动词开头的命令不算开关指令（如"开始扫地"），否则"开"+"始"会被误判为开关
 ACTION_VERB_PREFIX_RE = re.compile(

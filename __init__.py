@@ -159,6 +159,10 @@ class MijiaPlugin(NekoPluginBase):
         self.logger = get_plugin_logger(__name__)
         self.api: Optional[AsyncMijiaAPI] = None
         self.auth_service: Optional[AuthService] = None
+        # CredentialProvider 持有自己的 httpx.Client，此前只在 __del__ 里兜底关闭，
+        # 而 shutdown / logout 都不持有该对象 → 连接一直挂到 GC。这里存一份引用，
+        # 由 _close_credential_provider() 显式释放。
+        self._credential_provider: Optional[CredentialProvider] = None
         self.credential_path: Optional[Path] = None
         self._lock = asyncio.Lock()
         self._background_tasks: set = set()  # 持有后台 Task 引用，防止被 GC 提前回收
@@ -258,6 +262,7 @@ class MijiaPlugin(NekoPluginBase):
             from .mijia_api.core.config import ConfigManager
             config = ConfigManager()
             provider = CredentialProvider(config)
+            self._credential_provider = provider
             self.auth_service = AuthService(provider, store)
 
             credential = await self._load_credential()
@@ -282,7 +287,18 @@ class MijiaPlugin(NekoPluginBase):
         config = ConfigManager()
         store = FileCredentialStore(default_path=self.credential_path)
         provider = CredentialProvider(config)
+        self._credential_provider = provider
         self.auth_service = AuthService(provider, store)
+
+    def _close_credential_provider(self) -> None:
+        """释放凭据提供者的 HTTP 连接并置空引用（幂等）。"""
+        provider = self._credential_provider
+        self._credential_provider = None
+        if provider is not None:
+            try:
+                provider.close()
+            except Exception as e:
+                self.logger.warning(f"关闭凭据 HTTP 客户端时出错: {e}")
 
     async def _build_room_maps(self) -> tuple[dict[str, str], dict[str, str]]:
         """构建 room_id→room_name 和 device_did→room_name 两种映射
@@ -412,6 +428,7 @@ class MijiaPlugin(NekoPluginBase):
                 self.logger.warning(f"关闭API客户端时出错: {e}")
             finally:
                 self.api = None
+        self._close_credential_provider()
         return Ok({"status": "stopped"})
 
     @lifecycle(id="config_change")
@@ -608,7 +625,7 @@ class MijiaPlugin(NekoPluginBase):
             if credential:
                 await self._init_api(credential)
             else:
-                # 关闭旧 client 再置 None，防止 HttpClient / CacheManager 资源泄漏
+                # 关闭旧 client 再置 None，防止 httpx 连接池 / CacheManager / Redis 泄漏
                 old_api = self.api
                 self.api = None
                 if old_api is not None:
@@ -678,10 +695,11 @@ class MijiaPlugin(NekoPluginBase):
             deleted = await asyncio.to_thread(_delete_all)
             self.logger.debug(f"已删除 {deleted} 个数据文件")
         
-        # 关闭旧 client 再置 None，防止 HttpClient / CacheManager 资源泄漏
+        # 关闭旧 client 再置 None，防止 httpx 连接池 / CacheManager / Redis 泄漏
         old_api = self.api
         self.api = None
         self.auth_service = None
+        self._close_credential_provider()
         if old_api is not None:
             try:
                 await old_api.close()
