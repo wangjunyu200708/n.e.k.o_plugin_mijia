@@ -3,6 +3,12 @@ __pycache__/
 .pytest_cache/
 store.db
 
+# 凭据与配置的兜底默认位置（运行时实际落在宿主数据目录 plugins/<id>/data/）
+.mijia/
+# 凭证文件兜底：任何位置都不许入库
+credential.json
+.credential-*.tmp
+
 # 本地指令文件，不提交
 AGENTS.md
 

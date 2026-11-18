@@ -3,8 +3,12 @@
 提供凭据的存储和加载功能。
 """
 
+import getpass
 import json
+import os
+import subprocess
 import sys
+import tempfile
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
@@ -85,46 +89,72 @@ class FileCredentialStore(ICredentialStore):
     def save(self, credential: Credential, path: Optional[str] = None) -> None:
         """保存凭据到文件
 
+        先在同目录建临时文件、收紧权限后再写入内容，最后原子替换到目标路径。
+        不能直接 ``open(target, "w")``：那会先建出一个继承父目录权限的文件
+        （Windows 上通常普通用户可读），写完才 chmod/icacls，中间存在明文可读窗口；
+        而且中途崩溃会在目标路径留下半截 JSON。
+
         Args:
             credential: 要保存的凭据对象
             path: 可选的文件路径，如果未指定则使用默认路径
 
         Raises:
-            Exception: 当文件写入失败时抛出异常
+            Exception: 当文件写入失败或权限收紧失败时抛出（不静默降级为明文）
         """
         file_path = self._get_path(path)
 
         # 确保父目录存在（支持自定义路径如 foo/bar/credential.json）
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
+        tmp_path: Optional[Path] = None
         try:
-            with open(file_path, "w", encoding="utf-8") as f:
+            fd, tmp_name = tempfile.mkstemp(
+                dir=str(file_path.parent), prefix=".credential-", suffix=".tmp"
+            )
+            os.close(fd)
+            tmp_path = Path(tmp_name)
+
+            # 顺序关键：先收紧权限，再写内容
+            self._restrict_permissions(tmp_path)
+
+            with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(credential.to_dict(), f, ensure_ascii=False, indent=2, default=str)
+                f.flush()
+                os.fsync(f.fileno())
 
-            # 设置文件权限为仅所有者可读写
-            if sys.platform == "win32":
-                try:
-                    import subprocess
-                    username = subprocess.check_output(
-                        ["cmd", "/c", "echo", "%USERNAME%"], text=True
-                    ).strip()
-                    result = subprocess.run(
-                        ["icacls", str(file_path), "/inheritance:r", "/grant:r", f"{username}:F"],
-                        check=False, capture_output=True, text=True
-                    )
-                    if result.returncode != 0:
-                        logger.error(f"设置凭据文件权限失败(Windows): {result.stderr.strip()}")
-                        raise IOError(f"icacls failed: {result.stderr.strip()}")
-                except Exception as e:
-                    logger.warning(f"设置凭据文件权限失败(Windows): {e}")
-                    raise
-            else:
-                file_path.chmod(0o600)
-
+            os.replace(tmp_path, file_path)
+            tmp_path = None
             logger.info(f"凭据已保存到: {file_path}")
         except Exception as e:
             logger.error(f"保存凭据失败: {e}")
             raise
+        finally:
+            # 失败时清掉临时文件，别把明文碎片留在目录里
+            if tmp_path is not None:
+                try:
+                    tmp_path.unlink(missing_ok=True)
+                except OSError:
+                    logger.warning(f"清理临时凭据文件失败: {tmp_path}")
+
+    @staticmethod
+    def _restrict_permissions(file_path: Path) -> None:
+        """把凭据文件收紧到仅当前用户可读写。
+
+        失败直接抛出：宁可保存失败，也不要静默留一个明文可读的凭据。
+        """
+        if sys.platform == "win32":
+            username = getpass.getuser()
+            # 不用 text=True：icacls 的输出是本地代码页（中文 Windows 为 GBK），
+            # 宿主若开了 PYTHONUTF8，subprocess 解码线程会抛 UnicodeDecodeError。
+            result = subprocess.run(
+                ["icacls", str(file_path), "/inheritance:r", "/grant:r", f"{username}:F"],
+                check=False, capture_output=True,
+            )
+            if result.returncode != 0:
+                detail = (result.stderr or result.stdout).decode("utf-8", "replace").strip()
+                raise IOError(f"icacls failed: {detail}")
+        else:
+            file_path.chmod(0o600)
 
     def load(self, path: Optional[str] = None) -> Optional[Credential]:
         """从文件加载凭据

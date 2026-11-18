@@ -49,7 +49,9 @@
 ## 快速开始
 
 1. 把本仓库克隆/解压后，放到 N.E.K.O 的插件目录（`plugin/plugins/mijia/`）。
-2. 在插件 UI 扫码登录米家账号（凭据存 `data/credential.json`）。
+2. 在插件 UI 扫码登录米家账号（凭据存宿主数据目录下的 `data/credential.json`，即
+   Windows 的 `%LOCALAPPDATA%\N.E.K.O\plugins\mijia\data\credential.json`；
+   写入时先收紧权限再落盘并原子替换，权限收紧失败会直接报错而不是降级为明文）。
 3. 让 AI 伙伴用自然语言控制，例如：
 
 ```text
