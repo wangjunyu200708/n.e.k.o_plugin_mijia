@@ -46,8 +46,15 @@ if STANDALONE:
     sys.modules["config"] = _cfg
 
     # ── plugin.sdk.plugin ───────────────────────────────────────────────
-    class SdkError(Exception):
-        """桩件；真实实现在宿主 SDK。"""
+    class SdkError(RuntimeError):
+        """桩件；真实实现在宿主 SDK（同样支持 code / details）。"""
+
+        def __init__(self, message: str = "", *, code: str | None = None,
+                     details: object | None = None, **context: object) -> None:
+            super().__init__(message)
+            self.code = code
+            self.details = details
+            self.context = {k: v for k, v in context.items() if v is not None}
 
     class Ok:
         __slots__ = ("value",)

@@ -7,8 +7,9 @@ smart_control / query_device_state 调用。
 from .capability import CommandIR, ValidationResult, command_unit, property_unit, to_command_ir, validate_command
 from .chinese_number import chinese_to_int
 from .control_parser import ParseResult, parse_control_command
-from .device_matcher import MatchResult, format_ambiguous_message, match_devices
+from .device_matcher import MatchResult, format_ambiguous_message, match_devices, summarize_candidates
 from .normalizer import normalize_utterance
+from .positions import POSITION_MAP, detect_position, position_keywords
 from .router import RouteResult, route
 from .value_resolver import (
     extract_number,
@@ -24,6 +25,10 @@ __all__ = [
     "MatchResult",
     "format_ambiguous_message",
     "match_devices",
+    "summarize_candidates",
+    "POSITION_MAP",
+    "detect_position",
+    "position_keywords",
     "RouteResult",
     "route",
     "extract_number",

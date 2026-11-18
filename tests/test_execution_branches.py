@@ -37,6 +37,7 @@ def make_plugin(root, *, api=None):
     i18n = MagicMock()
     i18n.t.side_effect = _t
     plugin.i18n = i18n
+    plugin._lang = "zh-CN"
     return plugin
 
 
@@ -57,6 +58,28 @@ def _ir(root, **fields):
     return root.CommandIR(**fields)
 
 
+def _switch_ir(root, *, props, actions, name, value=True, gang=None,
+               require_explicit_gang=False, raw_text=""):
+    """构造 switch 分支的 CommandIR（执行层已不吃原始文本）。"""
+    return _ir(
+        root,
+        action="switch",
+        raw_text=raw_text,
+        device=name,
+        device_id="did-1",
+        value=value,
+        gang=gang,
+        require_explicit_gang=require_explicit_gang,
+        match_status="ok",
+        device_info={
+            "did": "did-1",
+            "name": name,
+            "properties": props,
+            "actions": actions,
+        },
+    )
+
+
 class TestExecuteSwitch:
     """二元开关：电源动作优先 → 开关属性 → 写后回读校验。"""
 
@@ -67,9 +90,10 @@ class TestExecuteSwitch:
         plugin = make_plugin(plugin_module, api=api)
         actions = [{"name": "Turn On", "siid": 6, "aiid": 1}]
 
-        result = await plugin._execute_switch(
-            [], actions, "did-1", "卧室灯", True, "打开卧室灯"
-        )
+        result = await plugin._execute_switch(_switch_ir(
+            plugin_module, props=[], actions=actions, name="卧室灯",
+            raw_text="打开卧室灯",
+        ))
 
         assert _envelope_ok(result)
         assert result.value["success"] is True
@@ -94,9 +118,10 @@ class TestExecuteSwitch:
             }
         ]
 
-        result = await plugin._execute_switch(
-            props, actions, "did-1", "卧室灯", True, "打开卧室灯"
-        )
+        result = await plugin._execute_switch(_switch_ir(
+            plugin_module, props=props, actions=actions, name="卧室灯",
+            raw_text="打开卧室灯",
+        ))
 
         assert _envelope_ok(result)
         api.call_device_action.assert_awaited_once()
@@ -118,9 +143,10 @@ class TestExecuteSwitch:
             }
         ]
 
-        result = await plugin._execute_switch(
-            props, [], "did-1", "电视", True, "打开电视"
-        )
+        result = await plugin._execute_switch(_switch_ir(
+            plugin_module, props=props, actions=[], name="电视",
+            raw_text="打开电视",
+        ))
 
         assert not _envelope_ok(result)
         assert "电视" in _envelope_error(result)
@@ -143,9 +169,10 @@ class TestExecuteSwitch:
             }
         ]
 
-        result = await plugin._execute_switch(
-            props, [], "did-1", "卧室灯", True, "打开卧室灯"
-        )
+        result = await plugin._execute_switch(_switch_ir(
+            plugin_module, props=props, actions=[], name="卧室灯",
+            raw_text="打开卧室灯",
+        ))
 
         assert not _envelope_ok(result)
 
@@ -154,9 +181,10 @@ class TestExecuteSwitch:
         plugin = make_plugin(plugin_module)
         props = [{"name": "Brightness", "access": "read_write", "type": "uint8"}]
 
-        result = await plugin._execute_switch(
-            props, [], "did-1", "台灯", True, "打开台灯"
-        )
+        result = await plugin._execute_switch(_switch_ir(
+            plugin_module, props=props, actions=[], name="台灯",
+            raw_text="打开台灯",
+        ))
 
         assert not _envelope_ok(result)
         assert "台灯" in _envelope_error(result)
@@ -168,9 +196,10 @@ class TestExecuteSwitch:
             {"name": "TV Input Control", "access": "read_write", "type": "uint8"},
         ]
 
-        result = await plugin._execute_switch(
-            props, [], "did-1", "电视", True, "打开电视"
-        )
+        result = await plugin._execute_switch(_switch_ir(
+            plugin_module, props=props, actions=[], name="电视",
+            raw_text="打开电视",
+        ))
 
         assert not _envelope_ok(result)
 
@@ -298,7 +327,80 @@ class TestExecuteSetPropCapability:
         )
 
         assert not _envelope_ok(out)
+        assert out.error.code == "invalid_value"
+        assert out.error.details["min"] == 16
+        assert out.error.details["max"] == 30
         api.control_device.assert_not_awaited()
+
+
+class TestStructuredErrors:
+    """错误必须带稳定 code + 可重试的结构化 detail（Q5 决策）。"""
+
+    async def test_device_not_found_carries_candidates(self, plugin_module):
+        plugin = make_plugin(plugin_module)
+        ir = _ir(
+            plugin_module,
+            action="switch",
+            device="灯",
+            match_status="not_found",
+            match_message="未找到匹配 '灯' 的设备",
+            candidates=[{"name": "客厅灯", "room": "客厅", "alias": "", "did": "d1"}],
+        )
+
+        out = await plugin._execute_control_branch(ir)
+
+        assert not _envelope_ok(out)
+        assert out.error.code == "device_not_found"
+        assert out.error.details["candidates"][0]["name"] == "客厅灯"
+
+    async def test_device_ambiguous_carries_candidates(self, plugin_module):
+        plugin = make_plugin(plugin_module)
+        ir = _ir(
+            plugin_module,
+            action="switch",
+            device="灯",
+            match_status="ambiguous",
+            match_message="找到 2 个匹配",
+            candidates=[
+                {"name": "客厅灯", "room": "客厅", "alias": "", "did": "d1"},
+                {"name": "卧室灯", "room": "卧室", "alias": "", "did": "d2"},
+            ],
+        )
+
+        out = await plugin._execute_control_branch(ir)
+
+        assert out.error.code == "device_ambiguous"
+        assert len(out.error.details["candidates"]) == 2
+
+    async def test_attribute_not_found_lists_available(self, plugin_module):
+        plugin = make_plugin(plugin_module)
+        props = [
+            {"name": "Brightness", "access": "read_write", "type": "uint8", "siid": 2, "piid": 1},
+        ]
+        ir = _ir(plugin_module, attribute="温度", value=26, unit="度")
+
+        out = await plugin._execute_set_prop(props, "did-1", "台灯", ir)
+
+        assert out.error.code == "attribute_not_found"
+        assert out.error.details["available"] == ["Brightness"]
+        assert out.error.details["attribute"] == "温度"
+
+    async def test_invalid_unit_carries_expected_unit(self, plugin_module):
+        plugin = make_plugin(plugin_module)
+        props = [
+            {
+                "name": "Brightness", "access": "read_write", "type": "uint8",
+                "siid": 2, "piid": 1, "value_range": [1, 100],
+            },
+        ]
+        # 亮度不接受"档"
+        ir = _ir(plugin_module, attribute="亮度", value=3, unit="档")
+
+        out = await plugin._execute_set_prop(props, "did-1", "台灯", ir)
+
+        assert out.error.code == "invalid_unit"
+        assert out.error.details["expected_unit"] == "percent"
+        assert "%" in out.error.details["allowed_units"]
 
 
 class TestExecuteAdjustPropCapability:
@@ -369,9 +471,10 @@ class TestMovedTablesStillWork:
             },
         ]
 
-        await plugin._execute_switch(
-            props, [], "did-1", "双控开关", True, "打开右边的开关"
-        )
+        await plugin._execute_switch(_switch_ir(
+            plugin_module, props=props, actions=[], name="双控开关",
+            gang="右", raw_text="打开右边的开关",
+        ))
 
         api.control_device.assert_awaited_once_with("did-1", 3, 1, True)
 
@@ -401,9 +504,10 @@ class TestMovedTablesStillWork:
             },
         ]
 
-        await plugin._execute_switch(
-            props, [], "did-1", "双控开关", True, "打开二键"
-        )
+        await plugin._execute_switch(_switch_ir(
+            plugin_module, props=props, actions=[], name="双控开关",
+            gang="二键", raw_text="打开二键",
+        ))
 
         api.control_device.assert_awaited_once_with("did-1", 3, 1, True)
 
@@ -559,3 +663,118 @@ class TestSeamFrontendB:
 
         assert not _envelope_ok(out)
         assert "Oven" in _envelope_error(out)
+
+
+class TestExplicitGang:
+    """多控开关：方位由前端放进 CommandIR.gang，后端不再扫描原文。"""
+
+    PROPS = [
+        {
+            "name": "Switch Status", "access": "read_write", "type": "bool",
+            "siid": 2, "piid": 1, "service_desc": "Left Switch",
+        },
+        {
+            "name": "Switch Status", "access": "read_write", "type": "bool",
+            "siid": 3, "piid": 1, "service_desc": "Right Switch",
+        },
+    ]
+
+    async def test_rules_frontend_chinese_gang(self, plugin_module):
+        """规则前端给中文方位（"右"）→ 命中 POSITION_MAP → Right。"""
+        api = AsyncMock()
+        api.call_device_action.return_value = False
+        api.control_device.return_value = True
+        api.get_device_properties.return_value = [{"value": True}]
+        plugin = make_plugin(plugin_module, api=api)
+
+        await plugin._execute_switch(_switch_ir(
+            plugin_module, props=self.PROPS, actions=[], name="双控开关",
+            gang="右", raw_text="打开右边的开关",
+        ))
+
+        api.control_device.assert_awaited_once_with("did-1", 3, 1, True)
+
+    async def test_llm_frontend_english_gang(self, plugin_module):
+        """LLM 前端直接给英文标签（"right"）→ 原样做 service_desc 子串匹配。"""
+        api = AsyncMock()
+        api.call_device_action.return_value = False
+        api.control_device.return_value = True
+        api.get_device_properties.return_value = [{"value": True}]
+        plugin = make_plugin(plugin_module, api=api)
+
+        await plugin._execute_switch(_switch_ir(
+            plugin_module, props=self.PROPS, actions=[], name="Dual Switch",
+            gang="right", raw_text="turn on the right switch",
+        ))
+
+        api.control_device.assert_awaited_once_with("did-1", 3, 1, True)
+
+    async def test_missing_gang_is_ambiguous_for_llm_frontend(self, plugin_module):
+        """require_explicit_gang=True：没给方位 → gang_ambiguous + 候选，不替模型猜。"""
+        api = AsyncMock()
+        plugin = make_plugin(plugin_module, api=api)
+
+        out = await plugin._execute_switch(_switch_ir(
+            plugin_module, props=self.PROPS, actions=[], name="Dual Switch",
+            gang=None, require_explicit_gang=True,
+        ))
+
+        assert not _envelope_ok(out)
+        assert out.error.code == "gang_ambiguous"
+        options = out.error.details["gang_options"]
+        assert [o["label"] for o in options] == ["Left Switch", "Right Switch"]
+        api.control_device.assert_not_awaited()
+
+    async def test_missing_gang_autopicks_for_rules_frontend(self, plugin_module):
+        """默认（规则前端）：没给方位沿用旧行为，自动选主开关。"""
+        api = AsyncMock()
+        api.call_device_action.return_value = False
+        api.control_device.return_value = True
+        api.get_device_properties.return_value = [{"value": True}]
+        plugin = make_plugin(plugin_module, api=api)
+
+        out = await plugin._execute_switch(_switch_ir(
+            plugin_module, props=self.PROPS, actions=[], name="双控开关",
+            gang=None, require_explicit_gang=False,
+        ))
+
+        assert _envelope_ok(out)
+        api.control_device.assert_awaited_once()
+
+    def test_to_command_ir_extracts_gang_from_raw_text(self, plugin_module):
+        """前端适配层：从用户原话抽方位，写进 IR.gang。"""
+        from nlp.control_parser import ParseResult
+        from nlp.device_matcher import MatchResult
+        from nlp.router import RouteResult
+
+        result = RouteResult(
+            branch="control",
+            raw_text="右边的开关打开",  # 归一化后的文本
+            match=MatchResult("ok", [{"did": "d1", "name": "双控开关"}]),
+            parsed=ParseResult(device="双控开关", action="switch", prop=None, value=True),
+        )
+
+        ir = plugin_module.to_command_ir(result, raw_text="把右边的开关打开")
+
+        assert ir.gang == "右"
+        assert ir.action == "switch"
+        assert ir.device_info is not None
+
+    def test_to_command_ir_carries_match_candidates(self, plugin_module):
+        from nlp.device_matcher import MatchResult
+        from nlp.router import RouteResult
+
+        result = RouteResult(
+            branch="control",
+            raw_text="开灯",
+            match=MatchResult(
+                "ambiguous", [], "多个匹配",
+                candidates=[{"name": "客厅灯", "room": "客厅", "alias": "", "did": "d1"}],
+            ),
+            parsed=None,
+        )
+
+        ir = plugin_module.to_command_ir(result)
+
+        assert ir.match_status == "ambiguous"
+        assert ir.candidates[0]["name"] == "客厅灯"

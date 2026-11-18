@@ -82,7 +82,12 @@ class _Err:
 
 
 class _SdkError(Exception):
-    pass
+    """与宿主 SdkError 一致的最小面：code / details 可选。"""
+
+    def __init__(self, message="", *, code=None, details=None):
+        super().__init__(message)
+        self.code = code
+        self.details = details
 
 
 @pytest.mark.parametrize(
@@ -101,9 +106,26 @@ def test_ok_becomes_success_envelope(value):
 def test_err_becomes_error_envelope_with_stable_code():
     got = _tool_envelope(_Err(_SdkError("未找到设备'卧室灯'")))
     assert got["is_error"] is True
-    assert got["output"] == {"error": "未找到设备'卧室灯'"}
-    # error = 稳定错误码（供程序/日志判断）；人类可读原因在 output.error
-    assert got["error"] == "MIJIA_CONTROL_FAILED"
+    # output 是结构化错误：code + detail + message；error 与 code 同为稳定码
+    assert got["output"] == {
+        "code": "control_failed",
+        "detail": {},
+        "message": "未找到设备'卧室灯'",
+    }
+    assert got["error"] == "control_failed"
+
+
+def test_err_carries_code_and_detail_from_sdk_error():
+    """内部 _err(code, msg, **detail) → SdkError(code=, details=) → 工具输出。"""
+    err = _SdkError(
+        "未找到设备'卧室灯'",
+        code="device_not_found",
+        details={"candidates": [{"name": "卧室灯", "room": "主卧"}]},
+    )
+    got = _tool_envelope(_Err(err))
+    assert got["output"]["code"] == "device_not_found"
+    assert got["output"]["detail"] == {"candidates": [{"name": "卧室灯", "room": "主卧"}]}
+    assert got["error"] == "device_not_found"
 
 
 def test_ok_never_reports_failure():
@@ -112,12 +134,20 @@ def test_ok_never_reports_failure():
 
 
 def test_tool_error_shape_uses_caller_supplied_code():
-    got = _tool_error("缺少 command 参数", code="MIJIA_MISSING_PARAM")
+    got = _tool_error("缺少 command 参数", code="missing_command")
     assert got == {
-        "output": {"error": "缺少 command 参数"},
+        "output": {"code": "missing_command", "detail": {}, "message": "缺少 command 参数"},
         "is_error": True,
-        "error": "MIJIA_MISSING_PARAM",
+        "error": "missing_command",
     }
+
+
+def test_tool_error_includes_detail():
+    got = _tool_error(
+        "有多个开关", code="gang_ambiguous",
+        detail={"gang_options": [{"index": 1, "label": "Left"}]},
+    )
+    assert got["output"]["detail"] == {"gang_options": [{"index": 1, "label": "Left"}]}
 
 
 def test_plain_value_passthrough_keeps_value_intact():

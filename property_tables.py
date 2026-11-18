@@ -1,14 +1,16 @@
-"""设备属性 / 开关方位 / 显示名的静态表（从 __init__.py 方法体内抽出）。
+"""设备属性 / 显示名的静态表（从 __init__.py 方法体内抽出）。
 
 这些表原先定义在方法体内，每次调用都要重新构造一遍字典/列表：
   NAME_MAP      205 条，_query_device_state 每次调用重建
   UNIT_MAP       41 条，同上
   PROP_KEYWORDS  16 条，_find_property_for_control 每次调用重建
-  _POS_MAP       10 条，_execute_switch 多控分支每次调用重建
 
 抽出后模块导入时构造一次，行为不变。
 后续国际化（阶段 5）会把 NAME_MAP / UNIT_MAP 换成按 locale 的数据文件；
-PROP_KEYWORDS / _POS_MAP 是「中文输入 → 英文 spec」的桥，只服务中文前端。
+PROP_KEYWORDS 是「中文输入 → 英文 spec」的桥，只服务中文前端。
+
+方位词表 `_POS_MAP` 已迁到 `nlp/positions.py`：它属于规则前端的解析资产，
+后端不应再扫描原始文本（见 CommandIR.gang）。
 """
 from __future__ import annotations
 
@@ -319,17 +321,4 @@ PROP_KEYWORDS = {
 }
 
 
-_POS_MAP = [
-    (r"左", ["Left", "left"]),
-    (r"右", ["Right", "right"]),
-    (r"中", ["Middle", "middle", "Center", "center"]),
-    (r"(?:一|1)键", ["First", "first", "1"]),
-    (r"(?:二|2)键", ["Second", "second", "2"]),
-    (r"(?:三|3)键", ["Third", "third", "3"]),
-    (r"(?:四|4)键", ["Fourth", "fourth", "4"]),
-    (r"(?:五|5)键", ["Fifth", "fifth", "5"]),
-    (r"(?:六|6)键", ["Sixth", "sixth", "6"]),
-]
-
-
-__all__ = ['NAME_MAP', 'PROP_KEYWORDS', 'UNIT_MAP', '_POS_MAP']
+__all__ = ['NAME_MAP', 'PROP_KEYWORDS', 'UNIT_MAP']

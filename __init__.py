@@ -1,7 +1,6 @@
 import asyncio
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -35,13 +34,19 @@ from .mijia_api.infrastructure.credential_store import FileCredentialStore
 from .mijia_api.services.auth_service import AuthService
 
 # 导入 NLP 规则引擎（纯函数，见 nlp/ 子包）
-from .nlp import CommandIR, match_devices, route, to_command_ir, validate_command
+from .nlp import (
+    CommandIR,
+    match_devices,
+    position_keywords,
+    route,
+    to_command_ir,
+    validate_command,
+)
 from .nlp.action_verbs import VERB_TO_ACTION
 from .nlp.intent_terms import detect_scene
 from .nlp.normalizer import normalize_utterance
 from .nlp.value_resolver import resolve_adjust_target
 from .property_tables import (  # noqa: E402  静态表，见该模块 docstring
-    _POS_MAP,
     NAME_MAP,
     PROP_KEYWORDS,
     UNIT_MAP,
@@ -102,9 +107,17 @@ SMART_CONTROL_DESCRIPTION = (
     "  ⚠️ 一次调用只传一条命令——本插件不解析多指令。用户一句话里含多个动作时，"
     "为每个动作各调用一次本工具，不要把多个动作塞进同一个 command。\n\n"
     "返回值：成功时 output 带 success 与 message（实际执行的设备与动作，"
-    "message 可直接转述给用户）；失败时 is_error=true 且 output.error 给出原因"
-    "（未登录 / 设备没匹配上 / 指令无法解析 / 凭据过期 / 动作被设备拒绝）。"
-    "⚠️ 失败就如实说明并追问要控制哪个设备，不要编造执行结果。"
+    "message 可直接转述给用户）。\n"
+    "失败时 is_error=true，output 形如 {code, detail, message}：\n"
+    "  code 是稳定错误码（如 device_not_found / device_ambiguous / "
+    "attribute_not_found / invalid_unit / invalid_value / gang_ambiguous），\n"
+    "  detail 是可用于重试的结构化数据（候选设备 candidates、可选方位 "
+    "gang_options、允许范围 min/max、可用属性 available、可选模式 "
+    "allowed_modes 等），\n"
+    "  message 是给用户的一句人话。\n"
+    "⚠️ 收到失败时：能凭 detail 修正就重试一次（例如换用候选设备名、按 "
+    "gang_options 指定方位、按 min/max 调整数值）；仍无法确定就如实说明并追问，"
+    "不要编造执行结果。"
 )
 
 SMART_CONTROL_SCHEMA: dict[str, Any] = {
@@ -122,15 +135,33 @@ SMART_CONTROL_SCHEMA: dict[str, Any] = {
 }
 
 
-def _tool_error(message: str, *, code: str) -> dict[str, Any]:
+def _tool_error(message: str, *, code: str, detail: dict[str, Any] | None = None) -> dict[str, Any]:
     """构造 @llm_tool 的错误信封。
 
-    `error` 放稳定错误码（大写+下划线，供程序/日志判断），人类可读的中文原因放
-    output.error（模型拿去转述给用户）——两者别混用，见 references/24 错误码规范。
+    `error` / `output.code` 放稳定错误码（大写+下划线，供程序/日志/模型重试判断），
+    `output.detail` 放模型自纠所需的结构化数据（候选设备、允许范围、可选方位…），
+    `output.message` 是给用户的一句人话（中文路径保留中文，不强制本地化）。
     llm_tools.py 只在返回值带 is_error / output 时才走信封分支，缺了就会把整份
     dict 当作 output 塞给模型。
     """
-    return {"output": {"error": message}, "is_error": True, "error": code}
+    return {
+        "output": {
+            "code": code,
+            "detail": detail or {},
+            "message": message,
+        },
+        "is_error": True,
+        "error": code,
+    }
+
+
+def _err(code: str, message: str, **detail: Any) -> Any:
+    """构造带稳定错误码 + 结构化 detail 的内部 Err。
+
+    `detail` 走 SdkError.details，`_tool_envelope` 会原样透到工具输出。
+    内部站点没标 code 时回落到 MIJIA_CONTROL_FAILED（仍是 is_error=True）。
+    """
+    return Err(SdkError(message, code=code, details=detail or None))
 
 
 def _tool_envelope(result: Any) -> dict[str, Any]:
@@ -139,7 +170,7 @@ def _tool_envelope(result: Any) -> dict[str, Any]:
     工具 handler 的返回值经 IPC 回到 user_plugin_server，再被
     plugin/server/routes/llm_tools.py 包成 {"output": ..., "is_error": ...}
     喂给对话 LLM。Err 直接返回会走 IPC 异常路径，把 PluginExecutionError
-    的报错串渗进模型上下文，所以这里显式降级成 is_error + 一句人类可读的原因。
+    的报错串渗进模型上下文，所以这里显式降级成 is_error + 稳定错误码。
 
     ⚠️ 内部一切语义失败都必须走 Err——Ok 一律翻成 is_error=false，若某条分支用
     Ok({"success": False}) 表示失败，模型会被告知"成功"。
@@ -147,7 +178,14 @@ def _tool_envelope(result: Any) -> dict[str, Any]:
     if callable(getattr(result, "is_ok", None)):
         if result.is_ok():
             return {"output": result.value, "is_error": False}
-        return _tool_error(str(result.error), code="MIJIA_CONTROL_FAILED")
+        err = result.error
+        code = getattr(err, "code", None) or "control_failed"
+        details = getattr(err, "details", None)
+        return _tool_error(
+            str(err),
+            code=code,
+            detail=details if isinstance(details, dict) else None,
+        )
     return {"output": result, "is_error": False}
 
 @neko_plugin
@@ -164,6 +202,10 @@ class MijiaPlugin(NekoPluginBase):
         # 由 _close_credential_provider() 显式释放。
         self._credential_provider: Optional[CredentialProvider] = None
         self.credential_path: Optional[Path] = None
+        # 运行时消息语言。`self.i18n.t(key)` 不传 locale 时会退回 plugin.toml 的
+        # default_locale(=zh-CN)，所以必须显式解析宿主语言并透传；默认值与
+        # default_locale 一致，解析失败时不会意外切成英文。
+        self._lang: str = "zh-CN"
         self._lock = asyncio.Lock()
         self._background_tasks: set = set()  # 持有后台 Task 引用，防止被 GC 提前回收
 
@@ -224,11 +266,29 @@ class MijiaPlugin(NekoPluginBase):
             "online_count": sum(1 for d in devices if d.get("is_online")),
         }
 
+    @staticmethod
+    def _resolve_lang() -> str:
+        """读取宿主全局语言；独立仓库 / 测试环境下回落到 zh-CN。
+
+        与 game_agent_minecraft 同源（utils.language_utils）。该函数在宿主里是
+        同步读配置的轻量调用，且只在 startup 解析一次。
+        """
+        try:
+            from utils.language_utils import get_global_language_full
+            lang = str(get_global_language_full() or "").strip()
+            return lang or "zh-CN"
+        except Exception:
+            return "zh-CN"
+
     # ========== 生命周期 ==========
     @lifecycle(id="startup")
     async def on_startup(self, **_):
         """插件启动：加载凭据并初始化API客户端"""
         self.logger.info("米家插件启动中...")
+
+        # 运行时消息语言：i18n.t 不传 locale 会用 default_locale(zh-CN)，
+        # 所以必须显式解析并透传（见 3 处 self.i18n.t(locale=self._lang)）。
+        self._lang = self._resolve_lang()
 
         # 读取配置
         self.credential_path = self.data_path("credential.json")
@@ -734,7 +794,7 @@ class MijiaPlugin(NekoPluginBase):
             
             return Ok({"success": True, "message": message, "homes": result, "count": len(result)})
         except TokenExpiredError:
-            return Err(SdkError("凭据已过期，请重新登录"))
+            return _err("token_expired", "凭据已过期，请重新登录")
         except Exception as e:
             self.logger.exception("获取家庭列表失败")
             return Err(SdkError(f"获取家庭列表失败: {e}"))
@@ -806,7 +866,7 @@ class MijiaPlugin(NekoPluginBase):
             self.logger.warning("缓存归属不匹配，跳过缓存")
 
         if not self.api:
-            return Err(SdkError("未登录"))
+            return _err("not_logged_in", "未登录")
         
         # 如果 home_id 为空，尝试获取第一个家庭
         if not home_id:
@@ -969,7 +1029,7 @@ class MijiaPlugin(NekoPluginBase):
             
             return Ok({"success": True, "message": message, "devices": result, "from_cache": False, "count": len(result)})
         except TokenExpiredError:
-            return Err(SdkError("凭据已过期，请重新登录"))
+            return _err("token_expired", "凭据已过期，请重新登录")
         except Exception as e:
             self.logger.exception("获取设备列表失败")
             return Err(SdkError(f"获取设备列表失败: {e}"))
@@ -1060,7 +1120,7 @@ class MijiaPlugin(NekoPluginBase):
                 self.logger.warning("场景缓存归属不匹配，跳过缓存")
 
         if not self.api:
-            return Err(SdkError("未登录"))
+            return _err("not_logged_in", "未登录")
 
         # 获取 home_id
         if not home_id:
@@ -1096,7 +1156,7 @@ class MijiaPlugin(NekoPluginBase):
             message = "\n".join(lines)
             return Ok({"success": True, "message": message, "scenes": result, "from_cache": False, "count": len(result)})
         except TokenExpiredError:
-            return Err(SdkError("凭据已过期，请重新登录"))
+            return _err("token_expired", "凭据已过期，请重新登录")
         except Exception as e:
             self.logger.exception("获取场景列表失败")
             return Err(SdkError(f"获取场景列表失败: {e}"))
@@ -1121,7 +1181,7 @@ class MijiaPlugin(NekoPluginBase):
         try:
             data = await read_json_async(cache_path)
         except FileNotFoundError:
-            return Err(SdkError("设备缓存不存在，请先获取设备列表"))
+            return _err("device_cache_missing", "设备缓存不存在，请先获取设备列表")
         except Exception as e:
             return Err(SdkError(f"读取设备缓存失败: {e}"))
 
@@ -1129,7 +1189,7 @@ class MijiaPlugin(NekoPluginBase):
         current_user_id = self.api.credential.user_id if self.api and self.api.credential else None
         cache_user_id = data.get('user_id') if isinstance(data, dict) else None
         if current_user_id and cache_user_id and cache_user_id != current_user_id:
-            return Err(SdkError("设备缓存归属不匹配，请先刷新设备列表"))
+            return _err("device_cache_owner_mismatch", "设备缓存归属不匹配，请先刷新设备列表")
 
         try:
             devices = data.get("devices", [])
@@ -1174,7 +1234,7 @@ class MijiaPlugin(NekoPluginBase):
         current_user_id = self.api.credential.user_id if self.api and self.api.credential else None
         cache_user_id = data.get('user_id') if isinstance(data, dict) else None
         if current_user_id and cache_user_id and cache_user_id != current_user_id:
-            return Err(SdkError("设备缓存归属不匹配，请先刷新设备列表"))
+            return _err("device_cache_owner_mismatch", "设备缓存归属不匹配，请先刷新设备列表")
 
         try:
             devices = data.get("devices", [])
@@ -1207,7 +1267,8 @@ class MijiaPlugin(NekoPluginBase):
         if not isinstance(command, str) or not command.strip():
             return _tool_error(
                 "缺少 command 参数：请把用户的原话作为 command 传入，如 '打开卧室灯'。",
-                code="MIJIA_MISSING_PARAM",
+                code="missing_command",
+                detail={"expected": "non-empty string", "param": "command"},
             )
         return _tool_envelope(await self._dispatch_smart_control(command.strip()))
 
@@ -1218,7 +1279,7 @@ class MijiaPlugin(NekoPluginBase):
         control 三个执行分支共用同一套 Result 约定。
         """
         if not self.api:
-            return Err(SdkError("未登录米家账号，无法控制设备：请先在米家插件面板完成扫码登录"))
+            return _err("not_logged_in", "未登录米家账号，无法控制设备：请先在米家插件面板完成扫码登录")
 
         # 原始指令属会话文本，按仓库规范用 print 而非 logger
         print(f"[smart_control] 指令: {command}", flush=True)
@@ -1235,7 +1296,7 @@ class MijiaPlugin(NekoPluginBase):
         if load_failure and not devices:
             # 刷新失败 ≠ 账号下没有设备。直接报真实原因，否则 route() 会落到
             # not_found，用户听到的是「设备没匹配上」，掩盖了未登录/网络错。
-            return Err(SdkError(f"无法获取设备列表：{load_failure}"))
+            return _err("device_list_unavailable", f"无法获取设备列表：{load_failure}", reason=load_failure)
         result = await route(norm, devices)
         # 房间映射惰性获取：仅当匹配确实需要（not_found/ambiguous 且存在缺
         # room_name 的设备——可能是目标设备）时才调 get_homes，避免精确匹配拖慢
@@ -1263,7 +1324,8 @@ class MijiaPlugin(NekoPluginBase):
 
         # ── 接缝：前端（规则引擎）的解析结果展平为 CommandIR，后端只认它 ──
         # 阶段 4 的 LLM 结构化前端会构出同样结构的 CommandIR，复用同一条执行路径。
-        ir = to_command_ir(result)
+        # raw_text 传用户原话：方位词抽取要在归一化前做，保持与改造前一致。
+        ir = to_command_ir(result, raw_text=command)
         if result.branch == "action":
             return await self._execute_action_branch(ir)
         if result.branch in ("switch", "control"):
@@ -1314,41 +1376,65 @@ class MijiaPlugin(NekoPluginBase):
                     # call_device_action 返回 False 表示动作被设备/网关拒绝，不能报成功
                     if act_result:
                         return Ok({"success": True, "message": f"✅ 已对'{display_name}'执行'{ir.verb}'操作", "device": display_name, "action": ir.verb, "result": act_result})
-                    return Err(SdkError(self.i18n.t(
-                        "switch.action_rejected",
-                        default="对'{name}'执行'{action}'操作失败（动作被拒绝）",
-                        name=display_name, action=ir.verb,
-                    )))
+                    return _err(
+                        "action_rejected",
+                        self.i18n.t(
+                            "switch.action_rejected",
+                            locale=self._lang,
+                            default="对'{name}'执行'{action}'操作失败（动作被拒绝）",
+                            name=display_name, action=ir.verb,
+                        ),
+                        device=display_name, action=ir.verb,
+                    )
                 except TokenExpiredError:
-                    return Err(SdkError("凭据已过期，请重新登录"))
+                    return _err("token_expired", "凭据已过期，请重新登录")
                 except Exception as e:
-                    return Err(SdkError(f"对'{display_name}'执行'{ir.verb}'操作失败: {e}"))
+                    return _err("device_control_failed", f"对'{display_name}'执行'{ir.verb}'操作失败: {e}", device=display_name, action=ir.verb)
             else:
                 action_names = [a.get("name") for a in actions]
-                return Err(SdkError(
-                    f"'{display_name}'没有'{ir.verb}'操作。可用操作：{', '.join(action_names) if action_names else '无'}"
-                ))
+                return _err(
+                    "action_not_found",
+                    f"'{display_name}'没有'{ir.verb}'操作。可用操作：{', '.join(action_names) if action_names else '无'}",
+                    device=display_name,
+                    action=ir.verb,
+                    available=action_names,
+                )
 
         # 设备未匹配/歧义：明确报错（原逻辑在此场景会掉落到属性解析，产生无意义结果）
+        if ir.match_status == "ambiguous":
+            return _err(
+                "device_ambiguous",
+                ir.match_message or "找到多个匹配设备",
+                candidates=ir.candidates,
+            )
         if ir.match_message:
-            return Err(SdkError(ir.match_message))
-        return Err(SdkError(f"未找到设备'{ir.device}'"))
+            return _err("device_not_found", ir.match_message, candidates=ir.candidates)
+        return _err("device_not_found", f"未找到设备'{ir.device}'", device=ir.device, candidates=ir.candidates)
 
     async def _execute_control_branch(self, ir: CommandIR) -> Any:
         """执行控制分支（switch / set_prop / adjust_prop）"""
+        if ir.match_status == "ambiguous":
+            return _err(
+                "device_ambiguous",
+                ir.match_message or "找到多个匹配设备",
+                candidates=ir.candidates,
+            )
         if ir.match_status != "ok" or ir.device_info is None:
-            return Err(SdkError(ir.match_message or "未找到设备"))
+            return _err(
+                "device_not_found",
+                ir.match_message or "未找到设备",
+                candidates=ir.candidates,
+            )
         if not ir.action:
-            return Err(SdkError("无法解析控制命令"))
+            return _err("unparsable_command", "无法解析控制命令")
 
         device = ir.device_info
         did = ir.device_id
         display_name = device.get("alias") or device.get("name", ir.device)
         props = device.get("properties", [])
-        actions = device.get("actions", [])
 
         if ir.action == "switch":
-            return await self._execute_switch(props, actions, did, display_name, ir.value, ir.raw_text)
+            return await self._execute_switch(ir)
         if ir.action == "adjust_prop":
             return await self._execute_adjust_prop(props, did, display_name, ir)
         return await self._execute_set_prop(props, did, display_name, ir)
@@ -1370,8 +1456,19 @@ class MijiaPlugin(NekoPluginBase):
                 return a
         return None
 
-    async def _execute_switch(self, props: list[dict], actions: list[dict], did: str, display_name: str, value: Any, command: str) -> Any:
-        """执行二元开关控制（电源动作 → 开关属性，含多控开关方位词匹配）"""
+    async def _execute_switch(self, ir: CommandIR) -> Any:
+        """执行二元开关控制（电源动作 → 开关属性，含多控开关方位匹配）。
+
+        方位由前端解析后放在 `ir.gang`；本方法**不再扫描原始文本**。
+        `ir.require_explicit_gang=True` 时（LLM 前端），多控设备缺方位会返回
+        `gang_ambiguous` + 候选，让模型追问或重试；规则前端保持"自动选主开关"。
+        """
+        device = ir.device_info or {}
+        did = ir.device_id or device.get("did")
+        display_name = device.get("alias") or device.get("name") or ir.device
+        props = device.get("properties", [])
+        actions = device.get("actions", [])
+        value = ir.value
         action_text = "打开" if value else "关闭"
 
         # 1) 电源动作优先；网关不支持动作时（如 /miotspec/action 返回 -6）回落属性通道。
@@ -1386,7 +1483,7 @@ class MijiaPlugin(NekoPluginBase):
                     return Ok({"success": True, "message": f"✅ 已{action_text}'{display_name}'", "device": display_name, "action": action_text, "result": act_result})
                 self.logger.info("电源动作返回失败，回落属性控制")
             except TokenExpiredError:
-                return Err(SdkError("凭据已过期，请重新登录"))
+                return _err("token_expired", "凭据已过期，请重新登录")
             except Exception as e:
                 self.logger.info(f"电源动作不可用，回落属性控制: {e}")
 
@@ -1405,25 +1502,39 @@ class MijiaPlugin(NekoPluginBase):
         switch_props = [p for p in switch_props if p.get("type") == "bool"]
 
         if not switch_props:
-            return Err(SdkError(f"'{display_name}'没有可控制的开关"))
+            return _err("switch_not_found", f"'{display_name}'没有可控制的开关", device=display_name)
 
-        # 多控开关：根据命令中的方位词匹配
+        # 多控开关：方位来自 CommandIR.gang（前端解析），后端不碰原文
         switch = None
         if len(switch_props) == 1:
             switch = switch_props[0]
         else:
-            for pattern, en_keywords in _POS_MAP:
-                if re.search(pattern, command):
-                    for p in switch_props:
-                        sdesc = (p.get("service_desc") or "").lower()
-                        if any(kw.lower() in sdesc for kw in en_keywords):
-                            switch = p
-                            break
-                    if switch:
+            gang_keywords = position_keywords(ir.gang) if ir.gang else []
+            if gang_keywords:
+                for p in switch_props:
+                    sdesc = (p.get("service_desc") or "").lower()
+                    if any(kw.lower() in sdesc for kw in gang_keywords):
+                        switch = p
                         break
 
-            # 未匹配到方位词 → 按默认主开关优先级自动选择
             if not switch:
+                if ir.require_explicit_gang:
+                    # LLM 前端：不替模型猜，回候选让它追问或重试
+                    return _err(
+                        "gang_ambiguous",
+                        f"'{display_name}'有多个开关，请指定要控制哪一个",
+                        device=display_name,
+                        gang_options=[
+                            {
+                                "index": i,
+                                "label": p.get("service_desc") or p.get("name") or f"gang {i}",
+                                "siid": p.get("siid"),
+                                "piid": p.get("piid"),
+                            }
+                            for i, p in enumerate(switch_props, 1)
+                        ],
+                    )
+                # 规则前端（中文）保持旧行为：自动选主开关
                 switch = self._pick_default_switch(switch_props, display_name)
                 self.logger.info(
                     f"多控开关未指定方位，自动选择默认主开关: "
@@ -1439,18 +1550,23 @@ class MijiaPlugin(NekoPluginBase):
             if not success:
                 # 语义失败必须走 Err：@llm_tool 边界按 Ok/Err 决定 is_error，
                 # Ok({"success": False}) 会被标成 is_error=false 对模型假报成功。
-                return Err(SdkError(f"{action_text}'{display_name}'失败"))
+                return _err("device_rejected", f"{action_text}'{display_name}'失败", device=display_name, action=action_text)
             # 写后回读校验：防止写入"属性合法但并非电源"的字段（如电视 speaker-mode
             # 的 is-on）被 API 照单全收返回 code 0，却对真机毫无作用。
             # 只写（access="write"）属性读不回来，无法验证是否真生效 → 返回未确认，
             # 不能直接报成功（可能写的是非电源功能开关）。
             # 云端属性传播有延迟（实测关闭可慢至数秒），故轮询而非单次回读。
             if switch.get("access") == "write":
-                return Err(SdkError(self.i18n.t(
-                    "switch.unconfirmed",
-                    default="已向'{name}'发送{action}指令，但无法确认是否已生效",
-                    name=display_name, action=action_text,
-                )))
+                return _err(
+                    "write_unconfirmed",
+                    self.i18n.t(
+                        "switch.unconfirmed",
+                        locale=self._lang,
+                        default="已向'{name}'发送{action}指令，但无法确认是否已生效",
+                        name=display_name, action=action_text,
+                    ),
+                    device=display_name, action=action_text,
+                )
             actual = None
             for wait in (0.5, 1.5, 3.0):
                 await asyncio.sleep(wait)
@@ -1460,7 +1576,7 @@ class MijiaPlugin(NekoPluginBase):
                     )
                     actual = chk[0].get("value") if chk else None
                 except TokenExpiredError:
-                    return Err(SdkError("凭据已过期，请重新登录"))
+                    return _err("token_expired", "凭据已过期，请重新登录")
                 except Exception:
                     actual = None
                 if actual is not None and bool(actual) == bool(value):
@@ -1471,22 +1587,27 @@ class MijiaPlugin(NekoPluginBase):
                     f"开关回读校验失败: device={display_name}, siid={siid}, piid={piid}, "
                     f"期望={value}, 实际={actual}（写入未生效）"
                 )
-                return Err(SdkError(self.i18n.t(
-                    "switch.no_response",
-                    default="{action}'{name}'失败：设备未响应电源控制（{name} 可能不支持云端开关）",
-                    action=action_text, name=display_name,
-                )))
+                return _err(
+                    "no_response",
+                    self.i18n.t(
+                        "switch.no_response",
+                        locale=self._lang,
+                        default="{action}'{name}'失败：设备未响应电源控制（{name} 可能不支持云端开关）",
+                        action=action_text, name=display_name,
+                    ),
+                    device=display_name, action=action_text,
+                )
             return Ok({"success": True, "message": f"✅ 已{action_text}'{display_name}'", "device": display_name, "action": action_text})
         except TokenExpiredError:
-            return Err(SdkError("凭据已过期，请重新登录"))
+            return _err("token_expired", "凭据已过期，请重新登录")
         except MijiaAPIException as e:
             self.logger.warning(f"API控制失败: device={display_name}, did={did}, siid={siid}, piid={piid}, value={value}, error={e}")
             if e.code == -6:
-                return Err(SdkError(f"控制'{display_name}'失败：设备不支持该操作或参数有误（siid={siid}, piid={piid}），请检查设备是否在线"))
-            return Err(SdkError(f"控制'{display_name}'失败: {e}"))
+                return _err("device_rejected", f"控制'{display_name}'失败：设备不支持该操作或参数有误（siid={siid}, piid={piid}），请检查设备是否在线", device=display_name)
+            return _err("device_control_failed", f"控制'{display_name}'失败: {e}", device=display_name)
         except Exception as e:
             self.logger.exception("控制失败")
-            return Err(SdkError(f"控制失败: {e}"))
+            return _err("device_control_failed", f"控制失败: {e}")
 
     async def _execute_adjust_prop(self, props: list[dict], did: str, display_name: str, ir: CommandIR) -> Any:
         """执行相对值调整（调亮一点/温度高一点）"""
@@ -1496,7 +1617,7 @@ class MijiaPlugin(NekoPluginBase):
         prop = self._find_property_for_control(props, prop_name, None)
         if not prop:
             available = [p.get("name") for p in props if p.get("access") in ["write", "read_write", "notify_read_write"]]
-            return Err(SdkError(f"'{display_name}'没有可控制的'{prop_name}'属性。可控制属性：{', '.join(available) if available else '无'}"))
+            return _err("attribute_not_found", f"'{display_name}'没有可控制的'{prop_name}'属性。可控制属性：{', '.join(available) if available else '无'}", device=display_name, attribute=prop_name, available=available)
 
         siid = prop.get("siid")
         piid = prop.get("piid")
@@ -1507,12 +1628,12 @@ class MijiaPlugin(NekoPluginBase):
             cur_results = await self.api.get_device_properties([{"did": did, "siid": siid, "piid": piid}])
             cur_value = cur_results[0].get("value") if cur_results else None
         except TokenExpiredError:
-            return Err(SdkError("凭据已过期，请重新登录"))
+            return _err("token_expired", "凭据已过期，请重新登录")
         except Exception:
             cur_value = None
 
         if cur_value is None:
-            return Err(SdkError(f"无法读取'{display_name}'的{prop_name}当前值"))
+            return _err("current_value_unavailable", f"无法读取'{display_name}'的{prop_name}当前值", device=display_name, attribute=prop_name)
 
         # 计算目标值（钳值 + 步长对齐，逻辑见 nlp/value_resolver.py）
         target = resolve_adjust_target(cur_value, direction, delta, vr)
@@ -1523,31 +1644,31 @@ class MijiaPlugin(NekoPluginBase):
                 return Ok({"success": True, "message": f"✅ 已将'{display_name}'的{prop_name}从{cur_value}调整为{target}", "device": display_name, "property": prop_name, "value": target})
             # 语义失败走 Err（同 _execute_set_prop：Ok({"success": False}) 会被
             # @llm_tool 边界标成 is_error=false）
-            return Err(SdkError(f"调整'{display_name}'的{prop_name}失败"))
+            return _err("device_rejected", f"调整'{display_name}'的{prop_name}失败", device=display_name, attribute=prop_name)
         except TokenExpiredError:
-            return Err(SdkError("凭据已过期，请重新登录"))
+            return _err("token_expired", "凭据已过期，请重新登录")
         except MijiaAPIException as e:
-            return Err(SdkError(f"调整'{display_name}'的{prop_name}失败: {e}"))
+            return _err("device_control_failed", f"调整'{display_name}'的{prop_name}失败: {e}", device=display_name, attribute=prop_name)
         except Exception as e:
             self.logger.exception("调整失败")
-            return Err(SdkError(f"调整失败: {e}"))
+            return _err("device_control_failed", f"调整失败: {e}")
 
     async def _execute_set_prop(self, props: list[dict], did: str, display_name: str, ir: CommandIR) -> Any:
         """执行属性控制（亮度/温度/模式等）"""
         prop_name = ir.attribute
         if not prop_name:
-            return Err(SdkError("请指定要调整的属性，如'灯亮度50%'"))
+            return _err("attribute_required", "请指定要调整的属性，如'灯亮度50%'")
 
         prop = self._find_property_for_control(props, prop_name, ir.value)
         if not prop:
             available = [p.get("name") for p in props if p.get("access") in ["write", "read_write", "notify_read_write"]]
-            return Err(SdkError(f"'{display_name}'没有可控制的'{prop_name}'属性。可控制属性：{', '.join(available) if available else '无'}"))
+            return _err("attribute_not_found", f"'{display_name}'没有可控制的'{prop_name}'属性。可控制属性：{', '.join(available) if available else '无'}", device=display_name, attribute=prop_name, available=available)
 
         # 能力校验：单位/范围与设备能力不兼容时（如 亮度 不接受 档），由能力层判
         # INVALID_UNIT / INVALID_VALUE，而非 NLP 层替设备决定
         cap_check = validate_command(prop, prop_name, ir.value, ir.unit)
         if cap_check.status != "valid":
-            return Err(SdkError(cap_check.message))
+            return _err(cap_check.status, cap_check.message, **cap_check.detail)
 
         value = ir.value
         # 极值处理："最高"/"最低" → 从 value_range 取边界
@@ -1562,7 +1683,7 @@ class MijiaPlugin(NekoPluginBase):
                 ]
                 value = max(vals) if value == "max" else min(vals)
             else:
-                return Err(SdkError(f"'{display_name}'的{prop_name}没有值范围信息，无法设置极值"))
+                return _err("value_range_unavailable", f"'{display_name}'的{prop_name}没有值范围信息，无法设置极值", device=display_name, attribute=prop_name)
 
         # 模式/档位枚举转换：中文 → 设备 spec 数字值
         if isinstance(value, str) and prop.get("value_list"):
@@ -1581,10 +1702,15 @@ class MijiaPlugin(NekoPluginBase):
                     )
                     for item in prop.get("value_list", [])
                 ]
-                return Err(SdkError(
+                return _err(
+                    "value_not_allowed",
                     f"'{display_name}'的{prop_name}不支持'{value}'。"
-                    f"可用模式：{', '.join(available_modes)}"
-                ))
+                    f"可用模式：{', '.join(available_modes)}",
+                    device=display_name,
+                    attribute=prop_name,
+                    value=value,
+                    allowed_modes=available_modes,
+                )
 
         # 窗帘位置：MIoT spec 定义 0=关闭, 100=全开，直接透传用户设定值
         # 不做反转——用户说"位置到80"即设为 80（80% 开）
@@ -1601,17 +1727,17 @@ class MijiaPlugin(NekoPluginBase):
                 return Ok({"success": True, "message": f"✅ 已将'{display_name}'的{prop_name}设为{value_display}", "device": display_name, "property": prop_name, "value": value})
             # 语义失败走 Err：下面 MijiaAPIException 分支也是 Err，同一类失败不
             # 能一半 Ok 一半 Err——@llm_tool 边界只看 Ok/Err 定 is_error。
-            return Err(SdkError(f"设置'{display_name}'的{prop_name}失败"))
+            return _err("device_rejected", f"设置'{display_name}'的{prop_name}失败", device=display_name, attribute=prop_name)
         except TokenExpiredError:
-            return Err(SdkError("凭据已过期，请重新登录"))
+            return _err("token_expired", "凭据已过期，请重新登录")
         except MijiaAPIException as e:
             self.logger.warning(f"API控制失败: device={display_name}, did={did}, siid={siid}, piid={piid}, value={value}, error={e}")
             if e.code == -6:
-                return Err(SdkError(f"设置'{display_name}'的{prop_name}失败：设备不支持该操作或参数有误"))
-            return Err(SdkError(f"设置'{display_name}'的{prop_name}失败: {e}"))
+                return _err("device_rejected", f"设置'{display_name}'的{prop_name}失败：设备不支持该操作或参数有误", device=display_name, attribute=prop_name)
+            return _err("device_control_failed", f"设置'{display_name}'的{prop_name}失败: {e}", device=display_name, attribute=prop_name)
         except Exception as e:
             self.logger.exception("控制失败")
-            return Err(SdkError(f"控制失败: {e}"))
+            return _err("device_control_failed", f"控制失败: {e}")
 
     @staticmethod
     def _pick_default_switch(switch_props: list, display_name: str = "") -> dict:
@@ -1829,12 +1955,12 @@ class MijiaPlugin(NekoPluginBase):
             pass
 
         if not scenes:
-            return Err(SdkError("场景列表为空，请先获取场景列表"))
+            return _err("scene_list_empty", "场景列表为空，请先获取场景列表")
 
         # 归属校验：场景缓存必须属于当前账号（user_id 严格匹配）
         current_user_id = self.api.credential.user_id if self.api else None
         if current_user_id and cached_user_id and cached_user_id != current_user_id:
-            return Err(SdkError("场景缓存归属不匹配，请先刷新场景列表"))
+            return _err("scene_cache_owner_mismatch", "场景缓存归属不匹配，请先刷新场景列表")
 
         # 归属校验：缓存的 home_id 必须属于当前账号
         if cached_home_id and self.api:
@@ -1842,7 +1968,7 @@ class MijiaPlugin(NekoPluginBase):
                 homes = await self.api.get_homes()
                 valid_home_ids = {h.id for h in homes if h.id}
                 if cached_home_id not in valid_home_ids:
-                    return Err(SdkError("场景缓存归属不匹配，请先刷新场景列表"))
+                    return _err("scene_cache_owner_mismatch", "场景缓存归属不匹配，请先刷新场景列表")
             except Exception:
                 pass
 
@@ -1852,10 +1978,10 @@ class MijiaPlugin(NekoPluginBase):
 
         if not matched:
             names = [s.get("name") for s in scenes]
-            return Err(SdkError(f"未找到场景'{scene_name}'。当前场景：{', '.join(names)}"))
+            return _err("scene_not_found", f"未找到场景'{scene_name}'。当前场景：{', '.join(names)}", scene=scene_name, available=names)
         if len(matched) > 1:
             names = [s.get("name") for s in matched]
-            return Err(SdkError(f"找到多个匹配场景：{', '.join(names)}，请更精确指定"))
+            return _err("scene_ambiguous", f"找到多个匹配场景：{', '.join(names)}，请更精确指定", candidates=names)
 
         scene = matched[0]
         # 优先使用缓存中的 home_id（场景所属家庭），否则回退到第一个家庭
@@ -1868,15 +1994,15 @@ class MijiaPlugin(NekoPluginBase):
                 home_id = None
 
         if not home_id:
-            return Err(SdkError("未找到可用家庭"))
+            return _err("home_not_found", "未找到可用家庭")
 
         try:
             success = await self.api.execute_scene(scene["id"], home_id)
             if success:
                 return Ok({"success": True, "message": f"✅ 已执行场景'{scene['name']}'"})
-            return Err(SdkError(f"执行场景'{scene['name']}'失败"))
+            return _err("scene_execution_failed", f"执行场景'{scene['name']}'失败", scene=scene.get("name"))
         except Exception as e:
-            return Err(SdkError(f"执行场景失败: {e}"))
+            return _err("scene_execution_failed", f"执行场景失败: {e}")
 
 
     # ========== 辅助功能：获取设备规格（可选） ==========
@@ -1896,12 +2022,12 @@ class MijiaPlugin(NekoPluginBase):
     async def query_device_state(self, name: str, **_):
         """根据设备名称查询设备状态"""
         if not self.api:
-            return Err(SdkError("未登录"))
+            return _err("not_logged_in", "未登录")
 
         # 统一设备匹配（支持区域+设备名、别名、模糊匹配）
         cached_devices, load_failure = await self._load_devices_cache()
         if load_failure and not cached_devices:
-            return Err(SdkError(f"无法获取设备列表：{load_failure}"))
+            return _err("device_list_unavailable", f"无法获取设备列表：{load_failure}", reason=load_failure)
         match_result = match_devices(name, cached_devices)
         # 房间映射惰性获取：仅当匹配需要（not_found/ambiguous 且存在缺 room_name
         # 的设备）时才调 get_homes，避免精确匹配被拖慢
@@ -1915,9 +2041,9 @@ class MijiaPlugin(NekoPluginBase):
                 name, cached_devices, api_room_map=room_map, device_room_map=device_room_map
             )
         if match_result.status == "not_found":
-            return Err(SdkError(match_result.message))
+            return _err("device_not_found", match_result.message, candidates=match_result.candidates)
         if match_result.status == "ambiguous":
-            return Err(SdkError(match_result.message))
+            return _err("device_ambiguous", match_result.message, candidates=match_result.candidates)
 
         devices = match_result.devices
         
@@ -2028,7 +2154,7 @@ class MijiaPlugin(NekoPluginBase):
             })
             
         except TokenExpiredError:
-            return Err(SdkError("凭据已过期，请重新登录"))
+            return _err("token_expired", "凭据已过期，请重新登录")
         except Exception as e:
             self.logger.exception("查询设备状态失败")
             return Err(SdkError(f"查询设备状态失败: {e}"))

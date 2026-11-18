@@ -15,16 +15,32 @@ class MatchResult:
     """设备匹配结果。
 
     status: "ok"（唯一命中）| "ambiguous"（多命中）| "not_found"（无匹配）
+    candidates: 失败/歧义时的候选摘要（name/room/alias/did），供结构化错误 detail
+    直接透给模型；只放定位信息，不放 properties/actions（控制 token 体积）。
     """
 
     status: str
     devices: list = field(default_factory=list)
     message: str = ""
+    candidates: list = field(default_factory=list)
 
     @property
     def device(self) -> Optional[dict]:
         """唯一命中时返回设备 dict，否则 None。"""
         return self.devices[0] if self.devices else None
+
+
+def summarize_candidates(devices: list[dict], limit: int = 20) -> list[dict]:
+    """把设备列表压成候选摘要（错误 detail 用）。"""
+    out: list[dict] = []
+    for d in devices[:limit]:
+        out.append({
+            "name": d.get("name", ""),
+            "room": d.get("room_name", ""),
+            "alias": d.get("alias", ""),
+            "did": d.get("did", ""),
+        })
+    return out
 
 
 def _normalize(name: str) -> str:
@@ -99,7 +115,10 @@ def match_devices(
     if len(exact) == 1:
         return MatchResult("ok", exact)
     if len(exact) > 1:
-        return MatchResult("ambiguous", exact, format_ambiguous_message(name, exact))
+        return MatchResult(
+            "ambiguous", exact, format_ambiguous_message(name, exact),
+            candidates=summarize_candidates(exact),
+        )
 
     # === 区域+设备名拆分 ===
     room_map: dict[str, str] = {}
@@ -150,7 +169,10 @@ def match_devices(
     if len(room_matched) == 1:
         return MatchResult("ok", room_matched)
     if len(room_matched) > 1:
-        return MatchResult("ambiguous", room_matched, format_ambiguous_message(name, room_matched))
+        return MatchResult(
+            "ambiguous", room_matched, format_ambiguous_message(name, room_matched),
+            candidates=summarize_candidates(room_matched),
+        )
 
     # === 模糊匹配（子串，双向） ===
     fuzzy = []
@@ -165,11 +187,15 @@ def match_devices(
     if len(fuzzy) == 1:
         return MatchResult("ok", fuzzy)
     if len(fuzzy) > 1:
-        return MatchResult("ambiguous", fuzzy, format_ambiguous_message(name, fuzzy))
+        return MatchResult(
+            "ambiguous", fuzzy, format_ambiguous_message(name, fuzzy),
+            candidates=summarize_candidates(fuzzy),
+        )
 
     # === 完全无匹配，列出所有设备 ===
     return MatchResult(
         "not_found",
         [],
         f"未找到匹配 '{name}' 的设备。当前设备列表：\n" + _list_all_devices(devices),
+        candidates=summarize_candidates(devices),
     )
