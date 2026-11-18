@@ -203,7 +203,7 @@ rm -rf /e/NEKOdm/N.E.K.O/plugin/plugins/mijia/{.git,__pycache__,.pytest_cache,.r
 ```bash
 cd /e/n.e.k.o_plugin_mijia
 /c/Users/25672/AppData/Local/Python/pythoncore-3.11-64/python.exe -m pytest tests/ -q
-# 期望：209 passed
+# 期望：215 passed, 1 skipped（Windows 跳过 POSIX 权限用例）
 ```
 
 > 用系统 Python 3.11（`py -3.11`）。WorkBuddy 内置的 3.13 没装 pytest，别用它。
@@ -225,6 +225,14 @@ cd /e/NEKOdm/N.E.K.O
 ⚠️ **`--no-respect-gitignore` 意味着 `.gitignore` 挡不住它**：仓库里任何 `.py`（哪怕未跟踪）都会被扫。所以**调试脚本一律不放仓库内**，统一放在仓库外的 `E:\n.e.k.o_plugin_mijia_local\`（见 5.6）。
 
 判据很简单：`lint` 报错但 CI 是绿的，说明仓库里有未跟踪的 `.py` 被扫到了；两者结论必须一致才能发版。
+
+⚠️ **别用系统 `ruff` 直接跑仓库**。本地装的是 ruff 0.16.5，CI 钉死 **0.12.4**，两版的 isort 分组规则不同；
+且 `--isolated` 下 ruff 靠「文件路径能否看到 `pyproject.toml`」判断 first-party，
+在仓库内跑和从仓库外跑结论相反。典型症状：`tests/` 里同时 `import pytest` 和 `from mijia_api...` 时，
+仓库内跑报 I001（要求空行分组），而 `lint`/CI 全绿（要求同组无空行，因为看不到 `pyproject.toml`）。
+**以 `neko-plugin lint` 的结论为准**，不要在仓库内用系统 ruff 跑完就"顺手修"，那会把 CI 修红。
+
+真要手动复刻，版本必须对齐：`uvx ruff@0.12.4 check --ignore-noqa --isolated --no-respect-gitignore --target-version py311 --line-length 120 --select E4,E7,E9,F,I .`
 
 ### 5.3 宿主挂载测试
 
