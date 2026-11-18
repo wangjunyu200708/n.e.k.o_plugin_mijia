@@ -5,3 +5,19 @@ store.db
 
 # 本地指令文件，不提交
 AGENTS.md
+
+# 架构审查报告：本地文档，不随仓库发布
+EXPERT_REVIEW.md
+
+# 本地调试脚本。
+# 注意：CI 的 ruff 用 `--no-respect-gitignore` 全量扫描目录，
+# 不忽略的话这些脚本的格式问题会直接卡住 verify 工作流。
+tests/_debug_compare_trace.py
+tests/_semantic_check.py
+tests/_verify_switch18.py
+
+# 本地产出的 trace / 模拟报告（回归基线 commands_execution_trace.json 不在此列，它要入库）
+tests/commands_execution_trace.md
+tests/mijia_trace_simulation.md
+tests/nlp_engine_trace.json
+tests/nlp_engine_trace.md
