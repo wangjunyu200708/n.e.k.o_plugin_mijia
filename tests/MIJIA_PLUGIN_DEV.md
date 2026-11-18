@@ -260,13 +260,20 @@ cd /e/NEKOdm/N.E.K.O
 
 判据很简单：`lint` 报错但 CI 是绿的，说明仓库里有未跟踪的 `.py` 被扫到了；两者结论必须一致才能发版。
 
-⚠️ **别用系统 `ruff` 直接跑仓库**。本地装的是 ruff 0.16.5，CI 钉死 **0.12.4**，两版的 isort 分组规则不同；
-且 `--isolated` 下 ruff 靠「文件路径能否看到 `pyproject.toml`」判断 first-party，
-在仓库内跑和从仓库外跑结论相反。典型症状：`tests/` 里同时 `import pytest` 和 `from mijia_api...` 时，
-仓库内跑报 I001（要求空行分组），而 `lint`/CI 全绿（要求同组无空行，因为看不到 `pyproject.toml`）。
-**以 `neko-plugin lint` 的结论为准**，不要在仓库内用系统 ruff 跑完就"顺手修"，那会把 CI 修红。
+⚠️ **别用系统 `ruff` 直接跑仓库**。本地装的是 ruff 0.16.5，CI 钉死 **0.12.4**，两版的 isort 分组规则不同。
 
-真要手动复刻，版本必须对齐：`uvx ruff@0.12.4 check --ignore-noqa --isolated --no-respect-gitignore --target-version py311 --line-length 120 --select E4,E7,E9,F,I .`
+更麻烦的是 **isort 对「自建包」的判定依赖运行环境**，同一个文件可能在三个地方得到不同结论：
+
+| 上下文 | ruff 怎么跑 | `mijia_api` 被判为 | 要求的分组 |
+|---|---|---|---|
+| `neko-plugin lint` / CI verify | `--isolated`，cwd 在父目录 | third-party | 与 `pytest` 同组、无空行 |
+| `neko-plugin publish` 预检 | 非 isolated，读仓库 `ruff.toml` | first-party | 与 `pytest` 分开、有空行 |
+
+**所以硬规则：单个测试文件里不要同时 import 真第三方包和自建包。** 一旦同时出现，这两个上下文的要求互相矛盾，无法同时通过 —— 症状是 CI 绿但 `publish` 报 I001，或者反过来。
+
+`tests/test_credential_store.py` 就是踩过这个坑的样本：为了不 import `pytest`，改用 `unittest.skipIf` + 自写的 `_expect_raises` 上下文管理器，文件里只剩 stdlib + `mijia_api`，两边结论就一致了。**新增测试照这个写法来。**
+
+真要手动复刻 CI，版本必须对齐：`uvx ruff@0.12.4 check --ignore-noqa --isolated --no-respect-gitignore --target-version py311 --line-length 120 --select E4,E7,E9,F,I .`
 
 ### 5.3 宿主挂载测试
 

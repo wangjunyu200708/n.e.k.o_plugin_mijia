@@ -11,11 +11,28 @@
 import json
 import stat
 import sys
+import unittest
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 
-import pytest
 from mijia_api.domain.models import Credential
 from mijia_api.infrastructure.credential_store import FileCredentialStore
+
+
+@contextmanager
+def _expect_raises(exc_type: type[BaseException]):
+    """替代 pytest.raises。
+
+    本文件刻意不 import pytest：isort 对 `mijia_api` 是第三方还是自建包的判断
+    依赖运行环境（有配置文件时按项目根判 first-party，`--isolated` 时按 cwd 判
+    third-party），一旦同时存在 pytest 这种真第三方包，两种环境要求的分组相反，
+    无法同时通过 CI 与发布预检。只留 stdlib + 自建包后两边结论一致。
+    """
+    try:
+        yield
+    except exc_type:
+        return
+    raise AssertionError(f"expected {exc_type.__name__} to be raised")
 
 
 def _credential(**overrides) -> Credential:
@@ -53,7 +70,7 @@ def test_saved_json_is_readable_dict(tmp_path):
     assert payload["service_token"] == "tok-secret"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows 用 icacls，不设 POSIX mode")
+@unittest.skipIf(sys.platform == "win32", "Windows 用 icacls，不设 POSIX mode")
 def test_saved_file_is_owner_only(tmp_path):
     path = tmp_path / "cred.json"
     FileCredentialStore(default_path=path).save(_credential())
@@ -79,7 +96,7 @@ def test_permission_failure_leaves_no_plaintext(tmp_path, monkeypatch):
 
     monkeypatch.setattr(store, "_restrict_permissions", _boom)
 
-    with pytest.raises(IOError):
+    with _expect_raises(IOError):
         store.save(_credential())
 
     assert not path.exists(), "权限收紧失败时不应在目标路径留下凭据"
@@ -96,7 +113,7 @@ def test_write_failure_leaves_no_temp_files(tmp_path, monkeypatch):
         "mijia_api.infrastructure.credential_store.json.dump", _broken_dump
     )
 
-    with pytest.raises(ValueError):
+    with _expect_raises(ValueError):
         store.save(_credential())
 
     assert [p.name for p in tmp_path.iterdir() if p.name.endswith(".tmp")] == []
