@@ -23,6 +23,8 @@
 ./
 ├── plugin.toml          # 插件清单（id=mijia，Hosted UI dashboard + 快速开始）
 ├── __init__.py          # MijiaPlugin：入口 + 执行分支 + 缓存/凭据管理
+├── property_tables.py   # 静态表：设备名 / 单位 / 属性关键词
+├── conftest.py          # 独立仓库测试桩（宿主内自动跳过）
 ├── nlp/                 # 自然语言规则引擎（纯函数，无 IO/API 依赖）
 │   ├── router.py            # 五步短路：场景→开关标记→查询→动作→属性控制
 │   ├── control_parser.py    # 分界 + 意图解析 → ParseResult(含 unit)
@@ -32,13 +34,14 @@
 │   ├── value_resolver.py    # 数值抽取 / 单位推断 / 相对量 / 钳值+步长对齐
 │   ├── normalizer.py        # 把/请/帮我 前缀剥离（不碰实体内部文本）
 │   ├── chinese_number.py    # 中文数字 → 阿拉伯（两=2、二十三=23）
-│   └── capability.py        # 设备能力校验（单位/范围）+ 薄 CommandIR
+│   ├── positions.py         # 多控开关方位词 → spec 关键词
+│   └── capability.py        # 设备能力校验（单位/范围）+ CommandIR
 ├── mijia_api/           # 自包含的米家 API 客户端（分层：domain/infrastructure/
-│                        #   services/repositories，同步 + 异步双实现）
+│                        #   services/repositories，纯异步）
 ├── i18n/                # 8 语言（en/ja/ko/zh-CN/zh-TW/ru/es/pt）
 ├── static/              # Hosted UI 控制面板
 ├── docs/                # 快速开始（8 语言）
-├── tests/               # 44 个单元测试（能力层/路由/匹配/数值）
+├── tests/               # 209 个测试（能力层/路由/匹配/数值/执行分支/回归基线）
 ├── .github/workflows/   # verify.yml + release.yml（官方插件仓库工作流）
 └── pyproject.toml
 ```
@@ -80,20 +83,32 @@
 ## 测试
 
 ```bash
-python -m pytest -q          # 依赖 pytest + pytest-asyncio（见 pyproject.toml dev 组）
-uv run neko-plugin check .   # 插件契约 + 仓库支撑文件校验（在 N.E.K.O 本体目录运行）
+python -m pytest tests/ -q                      # 依赖 pytest + pytest-asyncio（见 pyproject.toml dev 组）
+python -m plugin.neko_plugin_cli.cli precheck <plugin路径>   # 本地复刻 Market CI 门禁（在 N.E.K.O 目录运行）
 ```
 
-覆盖：路由五步短路、设备匹配优先级（含房间+部分别名）、数值解析与钳值、模式词前缀分界、能力层单位/范围校验等，共 145 个用例（含 100 条端到端 NLP 路由用例）。
+覆盖：路由五步短路、设备匹配优先级（含房间+部分别名）、数值解析与钳值、模式词前缀分界、能力层单位/范围校验、五个执行分支（含多控开关方位）、资源回收与工具结果信封等，共 **209 个用例**；其中 `tests/test_trace_baseline.py` 用 192 条真实中文指令钉住解析基线，改动 NLP 时防止无声漂移。
 
 ## 已知限制
 
 - 部分第三方网关（如 `api.mijia.tech`）的 `/miotspec/action` 动作端点不可用（全线 `-6`），扫地机 start/pause 等**动作类**控制会回落失败；属性通道（`/miotspec/prop/set`）正常。
 - 电视类设备（`xiaomi.tv.rmh1` 等）云端无电源属性，`Turn On` 仅在 BLE 服务——云端开机可能不可用，`Turn Off` 依赖动作端点。
 - 只写（access="write"）开关属性读不回来，无法回读确认，会返回"已发送但无法确认"。
+- 目前仅支持中国大陆区账号：网关与登录端点均为国内地址，海外（如新加坡/欧洲）账号尚无法登录。
 - 暂不支持多指令（一条命令控制多设备）；设备名以动作动词/模式词开头等长尾句式仍在持续完善。
 
 ## 更新日志
+
+### v3.0.0 (工具面迁移 + 执行层重构 + 错误结构化)
+- **[BREAKING]** `smart_control` 由 `@plugin_entry` 改为 `@llm_tool`：只在对话中由 AI 伙伴调用，不再能通过 `/runs` + `entry_id=smart_control` 触发（宿主会把 `__llm_tool__*` 从 analyzer 入口剥离，避免同一条指令被执行两次）。
+- **[FEAT]** 执行层引入 `CommandIR` 接缝：路由结果拍平为 IR，`_execute_*` 只吃 IR、不再扫描原话，为后续结构化前端复用同一后端。
+- **[FEAT]** 多控开关方位改由前端解析（`nlp/positions.py` → `CommandIR.gang`），后端不再从原话里找"左/右/二键"；缺方位时可按需返回 `gang_ambiguous` + 候选方位。
+- **[FEAT]** 工具错误结构化：`is_error` 信封 + 稳定错误码 + `detail`（允许范围 / 期望单位 / 候选设备 / 可选方位），供模型自纠重试，而不是只看到一句散文。
+- **[FEAT]** 运行时语言透传：`self.i18n.t(key, locale=self._lang)`，不再恒定回落到 zh-CN。
+- **[REFACTOR]** 移除同步 API 半边与死代码（净减约 2.8k 行），`mijia_api` 纯异步。
+- **[FIX]** 修复三处资源泄漏（凭据 provider 连接、缓存句柄、后台任务）。
+- **[FIX]** 静态表提到模块层（`property_tables.py`），设备规格并行拉取，缓存错误语义修正。
+- **[TEST]** 用例 45 → 209：补齐五个执行分支、接缝前置、设备列表并发与缓存语义、资源回收、工具结果契约，以及 192 条真实指令的解析回归基线。
 
 ### v2.0.1 (NLP 查询增强)
 - **[FIX]** 开关/控制分支剥离尾部询问词后缀（"关闭卧室灯怎么样"→设备名"卧室灯"），修复 device_hint 被询问词污染。
