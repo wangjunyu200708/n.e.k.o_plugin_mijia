@@ -24,14 +24,41 @@ import unicodedata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-from nlp.action_verbs import VERB_TO_ACTION  # noqa: E402
-from nlp.capability import validate_command  # noqa: E402
-from nlp.device_matcher import match_devices  # noqa: E402
-from nlp.intent_terms import detect_scene  # noqa: E402
-from nlp.normalizer import normalize_utterance  # noqa: E402
-from nlp.router import route  # noqa: E402
+
+def _import_nlp():
+    """延迟导入 nlp：仓库根必须先进入 sys.path 才能导入。
+
+    Market CI 的 ruff 带 `--ignore-noqa`，模块级 import 写在 sys.path 调整之后
+    会触发 E402 且 noqa 注释无效（CI 会直接失败），所以改用函数作用域导入。
+    """
+    from nlp.action_verbs import VERB_TO_ACTION
+    from nlp.capability import validate_command
+    from nlp.device_matcher import match_devices
+    from nlp.intent_terms import detect_scene
+    from nlp.normalizer import normalize_utterance
+    from nlp.router import route
+
+    return (
+        VERB_TO_ACTION,
+        validate_command,
+        match_devices,
+        detect_scene,
+        normalize_utterance,
+        route,
+    )
+
+
+(
+    VERB_TO_ACTION,
+    validate_command,
+    match_devices,
+    detect_scene,
+    normalize_utterance,
+    route,
+) = _import_nlp()
 
 CMDS_FILE = ROOT / "tests" / "智能家居语音常用命令.txt"
 JSON_OUT = ROOT / "tests" / "commands_execution_trace.json"
