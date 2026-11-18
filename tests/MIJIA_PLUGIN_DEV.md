@@ -1,7 +1,7 @@
 # 米家智能家居插件（mijia）开发指南
 
 > 覆盖：代码结构、怎么改代码、怎么测试、怎么发布。
-> 最后更新：2026-11-18（v3.0.0）
+> 最后更新：2026-11-18（v2.1.0）
 
 ---
 
@@ -10,7 +10,7 @@
 | 项 | 值 |
 |---|---|
 | 插件 id | `mijia` |
-| 当前版本 | v3.0.0（`plugin.toml` 与 `pyproject.toml` 必须同步） |
+| 当前版本 | v2.1.0（`plugin.toml` 与 `pyproject.toml` 必须同步） |
 | 独立仓库（= 插件根） | https://github.com/wangjunyu200708/n.e.k.o_plugin_mijia |
 | 开发位置 | `E:\n.e.k.o_plugin_mijia` |
 | 挂载测试位置 | `E:\NEKOdm\N.E.K.O\plugin\plugins\mijia` |
@@ -216,7 +216,7 @@ CommandIR.branch
 ### 4.8 改 API 客户端
 
 `mijia_api/` 分层：infrastructure（http/credential）→ repositories（spec/device）→ services（业务）→ factory（组合）。
-**纯异步**：同步实现已于 3.0.0 删除，不要重新引入。宿主 event loop 内禁止同步文件 IO / SQLite / HTTP / `time.sleep`，一律用 async 助手或 `asyncio.to_thread`。
+**纯异步**：同步实现已于 2.1.0 删除，不要重新引入。宿主 event loop 内禁止同步文件 IO / SQLite / HTTP / `time.sleep`，一律用 async 助手或 `asyncio.to_thread`。
 
 ### 4.9 拷贝到宿主做测试
 

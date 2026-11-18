@@ -1,6 +1,6 @@
 [project]
 name = "n.e.k.o_plugin_mijia"
-version = "3.1.0"
+version = "2.1.0"
 description = "N.E.K.O 米家智能家居插件（自然语言控制米家设备）"
 requires-python = ">=3.11"
 
