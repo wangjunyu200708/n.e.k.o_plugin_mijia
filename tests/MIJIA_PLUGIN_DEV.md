@@ -59,6 +59,8 @@ n.e.k.o_plugin_mijia/
 └── pyproject.toml       # pytest 配置（testpaths/pythonpath/asyncio_mode）
 ```
 
+> 仓库内**不放**任何一次性调试脚本。它们统一放在与仓库平行的 `E:\n.e.k.o_plugin_mijia_local\`，原因见 5.2 / 5.6。
+
 ### 2.2 与宿主的关系
 
 宿主插件目录是**整包拷贝**，不是符号链接：宿主加载的是 `plugin/plugins/mijia/` 下的副本，改完源码必须重新拷贝才生效。
@@ -220,7 +222,9 @@ cd /e/NEKOdm/N.E.K.O
 - `precheck` = lint + sync + release check 三件套
 - `check <plugin> -r` = 严格发版检查（含打包与 payload hash 校验），`--market-release` 额外校验市场仓库/标签约定
 
-⚠️ **`--no-respect-gitignore` 意味着 `.gitignore` 挡不住它**：仓库里任何 `.py`（哪怕未跟踪）都会被扫。本地调试脚本必须放在仓库外，否则本地 `lint` 会红，而 CI（`actions/checkout` 只拉已跟踪文件）却是绿的 —— 两边结果不一致，最容易误判。
+⚠️ **`--no-respect-gitignore` 意味着 `.gitignore` 挡不住它**：仓库里任何 `.py`（哪怕未跟踪）都会被扫。所以**调试脚本一律不放仓库内**，统一放在仓库外的 `E:\n.e.k.o_plugin_mijia_local\`（见 5.6）。
+
+判据很简单：`lint` 报错但 CI 是绿的，说明仓库里有未跟踪的 `.py` 被扫到了；两者结论必须一致才能发版。
 
 ### 5.3 宿主挂载测试
 
@@ -258,6 +262,27 @@ curl -s http://127.0.0.1:48916/runs/<run_id>
 ### 5.5 回归基线
 
 `tests/test_trace_baseline.py` 用 `commands_execution_trace.json` 钉住 192 条真实中文指令的解析/路由结果。改 `nlp/` 后若基线漂移，先确认是**有意的行为变化**再更新基线，不要直接重刷。
+
+### 5.6 本地一次性调试脚本（不进仓库）
+
+三个脚本放在 **`E:\n.e.k.o_plugin_mijia_local\`**，与仓库平行、不在其内部。它们内部用绝对路径 `E:\n.e.k.o_plugin_mijia`，所以放在哪儿都能跑，不受工作目录影响。
+
+```bash
+cd /e/n.e.k.o_plugin_mijia_local
+PY=/c/Users/25672/AppData/Local/Python/pythoncore-3.11-64/python.exe
+
+$PY _verify_switch18.py         # 单条：switch-18 防查询劫持，打印 branch/did
+$PY _debug_compare_trace.py     # 100 条 trace 逐条比对解析结果，列出 mismatch
+$PY _semantic_check.py          # 扫 trace 里可疑的 device_hint 抽取
+```
+
+| 脚本 | 作用 | 输入 |
+|---|---|---|
+| `_verify_switch18.py` | 验证 `关闭卧室灯怎么样` 不被查询意图劫持 | 无（内联指令） |
+| `_debug_compare_trace.py` | 逻辑层结果 vs trace 期望逐条 diff | `tests/nlp_engine_trace.json` |
+| `_semantic_check.py` | 设备名抽取的语义可疑项统计 | `tests/nlp_engine_trace.json` |
+
+后两个读的 `tests/nlp_engine_trace.json` 仍留在仓库 `tests/` 下（已在 `.gitignore`，且是 `.json`，ruff 不会扫）。`_debug_compare_trace.py` 当前报 1 条 mismatch（`switch-18`）属于**已知长尾**，用 `_verify_switch18.py` 单独看实际分支。
 
 ---
 
@@ -300,7 +325,7 @@ git -c http.proxy=http://127.0.0.1:7897 -c https.proxy=http://127.0.0.1:7897 pus
 
 | 坑 | 说明 |
 |---|---|
-| 本地 lint 与 CI 结果不一致 | `lint` 用 `--no-respect-gitignore` 扫本地全目录，CI 只 checkout 已跟踪文件。调试脚本必须放仓库外 |
+| 本地 lint 与 CI 结果不一致 | `lint` 用 `--no-respect-gitignore` 扫本地全目录，CI 只 checkout 已跟踪文件。调试脚本已搬到仓库外 `E:\n.e.k.o_plugin_mijia_local\`，勿再放回 `tests/` |
 | `/miotspec/action` 死端点 | 部分网关 action 调用全线 -6，动作类控制（扫地机 start/pause）会失败；属性通道 `/miotspec/prop/set` 正常 |
 | 电视云端无电源 | `Turn On` 在 BLE 服务（siid 6），云端不可用；`Turn Off` 依赖已死的 action 端点。开关走 2 级链 |
 | 只写属性无法回读 | access="write" 的开关属性读不回来 → 返回"已发送但无法确认"（Err），绝不假报成功 |
