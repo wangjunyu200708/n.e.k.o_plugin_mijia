@@ -42,6 +42,7 @@ n.e.k.o_plugin_mijia/
 │   ├── normalizer.py        # 把/请/帮我 前缀剥离（不碰实体内部文本）
 │   ├── chinese_number.py    # 中文数字 → 阿拉伯（两=2、二十三=23）
 │   ├── positions.py         # 多控开关方位词 → service_desc 关键词（前端资产）
+│   ├── splitter.py          # 多指令拆分 + 共享动词补全（一句话控多设备）
 │   └── capability.py        # 能力校验（单位/范围）+ CommandIR 定义
 ├── mijia_api/           # 米家 API 客户端（分层，**纯异步**，4665 行）
 │   ├── core/                # config（网关/登录端点硬编码在此）/ logging
@@ -82,7 +83,40 @@ n.e.k.o_plugin_mijia/
   ⑤ control：parse_control_command → switch / set_prop / adjust_prop
 ```
 
-### 3.2 执行分支：CommandIR 贯穿
+### 3.2 多指令拆分（一句话控多设备）
+
+入口 `_dispatch_smart_control` 先问 `nlp.splitter.split_commands()` 要不要拆，
+再决定走 `_dispatch_multi`（多段）还是 `_dispatch_single`（单段）。
+
+```
+"打开客厅灯和卧室灯"
+  → split_commands → ['打开客厅灯', '卧室灯']
+  → _dispatch_multi
+      ① _load_devices_cache()              设备列表只加载一次，各段共享
+      ② 逐段 _resolve_segment              预检：这段能不能路由到明确目标？
+           原样 routable → 用它
+           不行 → 补上前面那段的共享动词（'卧室灯' → '打开卧室灯'）再试
+           还不行 → 整句回退，走 _dispatch_single(原文)
+      ③ _execute_multi                     串行执行，逐条 _describe_result
+      ④ 汇总：全成功 Ok(total/results/message)
+               有失败 Err(multi_control_failed | multi_control_partial_failure,
+                         detail.results 带逐条结果)
+```
+
+**为什么要预检，不能直接拆完就执行**：切分正则是"宁可切错也不漏切"的，
+设备名里带连词时会被切坏（`打开和风空调` → `['打开','风空调']`）。若不预检，
+前半段 `打开` 会被当成一条真指令，产生原句根本没有的动作。预检的判据是
+"场景/查询放行，开关/动作/控制必须 `match.status == 'ok'`"，任一段不过就整句回退。
+
+**改拆分规则时注意**：
+- `LEAD_VERB_RE` 必须是捕获组，且长词在前、单字 `开/关` 殿后——否则
+  `开始扫地` 会被 `开` 截断，补出来变成 `开扫地`。
+- 单段时 `split_commands` 返回**原始文本**（不是归一化后的），因为单指令路径
+  要拿它当 `raw_text` 抽方位词。调用方也只在 `len(segments) > 1` 时才用返回值。
+- 同一设备的多个动作（`打开客厅灯并调到50%`）不在拆分范围内：后段没有设备名，
+  预检不过会整句回退，不做跨段继承。
+
+### 3.3 执行分支：CommandIR 贯穿
 
 `to_command_ir(result, raw_text=...)` 把路由结果拍平成 `CommandIR`，后端所有执行方法只吃 IR、不扫描原话：
 
@@ -103,7 +137,7 @@ CommandIR.branch
 
 **多控开关**：方位不再由后端扫原话。`to_command_ir` 调 `nlp.positions.detect_position()` 抽出 `ir.gang`（"右"/"二键"），后端只读该字段；`require_explicit_gang=True` 时缺方位返回 `gang_ambiguous` + 候选，让调用方追问而不是静默选主开关。
 
-### 3.3 两个工具面（不可混用）
+### 3.4 两个工具面（不可混用）
 
 | 装饰器 | 谁调用 | 当前内容 |
 |---|---|---|
@@ -112,7 +146,7 @@ CommandIR.branch
 
 宿主会把 `__llm_tool__*` 从 analyzer 的入口列表里剥掉，所以同一个能力**只能二选一**：给了 `@llm_tool` 就不能再用 `/runs` + `entry_id=smart_control` 触发。
 
-### 3.4 错误约定（改错信息前必读）
+### 3.5 错误约定（改错信息前必读）
 
 内部一律 `Err(SdkError(...))`，工具层统一转信封：
 
@@ -124,14 +158,14 @@ CommandIR.branch
 
 **纪律**：语义失败必须走 `Err`。用 `Ok({"success": False})` 表示失败会被翻成 `is_error=false`，模型会以为成功了。
 
-### 3.5 能力校验边界
+### 3.6 能力校验边界
 
 - **NLP 只产语义候选，不替设备决定单位**。`亮度调到三档` → `attribute=亮度, value=3, unit=档`，由 `validate_command` 判 `invalid_unit`（亮度单位是 percent，不接受 level）。
 - 校验失败时 `ValidationResult.detail` 会带出允许范围 / 期望单位，模型可据此自行重试。
 - **Unknown/Incomplete 是正常解析态**（如 `调到三档` 无设备 = MISSING_DEVICE），不是 NLP 失败。
 - **多指令不支持**（无 Splitter），一条指令只解析一个设备动作。
 
-### 3.6 运行时语言
+### 3.7 运行时语言
 
 `self.i18n.t(key)` 不传 `locale` 会退回 `plugin.toml` 的 `default_locale`（zh-CN），所以必须显式透传宿主语言：`self.i18n.t(key, locale=self._lang)`。`self._lang` 在启动时解析，失败回落到 zh-CN。
 
@@ -203,7 +237,7 @@ rm -rf /e/NEKOdm/N.E.K.O/plugin/plugins/mijia/{.git,__pycache__,.pytest_cache,.r
 ```bash
 cd /e/n.e.k.o_plugin_mijia
 /c/Users/25672/AppData/Local/Python/pythoncore-3.11-64/python.exe -m pytest tests/ -q
-# 期望：215 passed, 1 skipped（Windows 跳过 POSIX 权限用例）
+# 期望：261 passed, 1 skipped（Windows 跳过 POSIX 权限用例）
 ```
 
 > 用系统 Python 3.11（`py -3.11`）。WorkBuddy 内置的 3.13 没装 pytest，别用它。
@@ -271,6 +305,8 @@ curl -s http://127.0.0.1:48916/runs/<run_id>
 
 `tests/test_trace_baseline.py` 用 `commands_execution_trace.json` 钉住 192 条真实中文指令的解析/路由结果。改 `nlp/` 后若基线漂移，先确认是**有意的行为变化**再更新基线，不要直接重刷。
 
+多指令拆分**不进基线**：基线测的是 `nlp.route()` 单句路由，拆分发生在插件分发层（`_dispatch_smart_control`），被 `tests/test_splitter.py` + `tests/test_multi_command.py` 覆盖。核对过 192 条基线无一被 `split_commands` 拆开，所以拆分功能对基线应零影响。
+
 ### 5.6 本地一次性调试脚本（不进仓库）
 
 三个脚本放在 **`E:\n.e.k.o_plugin_mijia_local\`**，与仓库平行、不在其内部。它们内部用绝对路径 `E:\n.e.k.o_plugin_mijia`，所以放在哪儿都能跑，不受工作目录影响。
@@ -297,7 +333,7 @@ $PY _semantic_check.py          # 扫 trace 里可疑的 device_hint 抽取
 ## 6. 发布流程（Release）
 
 ```bash
-# 0) 代码已同步、209 测试全绿、precheck 干净
+# 0) 代码已同步、261 测试全绿、precheck 干净
 
 # 1) 发版前严格检查（宿主目录）
 cd /e/NEKOdm/N.E.K.O

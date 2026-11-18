@@ -45,6 +45,7 @@ from .nlp import (
 from .nlp.action_verbs import VERB_TO_ACTION
 from .nlp.intent_terms import detect_scene
 from .nlp.normalizer import normalize_utterance
+from .nlp.splitter import LEAD_VERB_RE, inherit_verb, split_commands
 from .nlp.value_resolver import resolve_adjust_target
 from .property_tables import (  # noqa: E402  静态表，见该模块 docstring
     NAME_MAP,
@@ -104,13 +105,19 @@ SMART_CONTROL_DESCRIPTION = (
     "command 参数：\n"
     "  ⚠️ 传用户的原话，不要改写、翻译，也不要自行补充设备名、房间名、数值或单位。\n"
     "  必须是完整的一句话，不要传裸标识符（on / power / 100 这种）。\n"
-    "  ⚠️ 一次调用只传一条命令——本插件不解析多指令。用户一句话里含多个动作时，"
-    "为每个动作各调用一次本工具，不要把多个动作塞进同一个 command。\n\n"
+    "  ✅ 一句话含多个动作时（'打开客厅灯和卧室灯'、'关掉插座，把客厅灯调到50%'），"
+    "把整句原话照传即可——本插件会自行拆分、逐条执行并汇总，"
+    "不要手动拆成多次调用，也不要漏掉其中任何一个动作。\n\n"
     "返回值：成功时 output 带 success 与 message（实际执行的设备与动作，"
     "message 可直接转述给用户）。\n"
+    "多指令时 output 额外带 total 与 results（逐条 command / success / message），"
+    "message 已是可直接转述的逐条清单。\n"
     "失败时 is_error=true，output 形如 {code, detail, message}：\n"
     "  code 是稳定错误码（如 device_not_found / device_ambiguous / "
-    "attribute_not_found / invalid_unit / invalid_value / gang_ambiguous），\n"
+    "attribute_not_found / invalid_unit / invalid_value / gang_ambiguous）。\n"
+    "  多指令里只要有失败就走错误路径：multi_control_failed（全失败）或 "
+    "multi_control_partial_failure（部分失败），detail.results 里有逐条结果，"
+    "成功的那几条已经真的生效了，转述时不要说成全部失败。\n"
     "  detail 是可用于重试的结构化数据（候选设备 candidates、可选方位 "
     "gang_options、允许范围 min/max、可用属性 available、可选模式 "
     "allowed_modes 等），\n"
@@ -187,6 +194,26 @@ def _tool_envelope(result: Any) -> dict[str, Any]:
             detail=details if isinstance(details, dict) else None,
         )
     return {"output": result, "is_error": False}
+
+
+def _describe_result(command: str, result: Any) -> dict[str, Any]:
+    """把单条指令的内部 Result 压成多指令汇总里的一项。
+
+    成功时带上被控对象的人话描述（执行分支的 message），失败时带稳定错误码，
+    让模型能逐条转述"哪条成功、哪条为什么失败"，而不是只看到一句总述。
+    """
+    if callable(getattr(result, "is_ok", None)) and result.is_ok():
+        value = result.value
+        message = value.get("message", "") if isinstance(value, dict) else str(value)
+        return {"command": command, "success": True, "message": message}
+    err = getattr(result, "error", None)
+    return {
+        "command": command,
+        "success": False,
+        "code": getattr(err, "code", None) or "control_failed",
+        "message": str(err) if err is not None else "执行失败",
+    }
+
 
 @neko_plugin
 class MijiaPlugin(NekoPluginBase):
@@ -1277,6 +1304,9 @@ class MijiaPlugin(NekoPluginBase):
 
         由 smart_control 的 @llm_tool 边界翻译成工具信封；query / action /
         control 三个执行分支共用同一套 Result 约定。
+
+        一句话含多个动作时先尝试拆分（见 nlp/splitter.py），逐段执行后汇总；
+        拆不动就整句走单指令路径，行为与拆分功能上线前完全一致。
         """
         if not self.api:
             return _err("not_logged_in", "未登录米家账号，无法控制设备：请先在米家插件面板完成扫码登录")
@@ -1284,6 +1314,18 @@ class MijiaPlugin(NekoPluginBase):
         # 原始指令属会话文本，按仓库规范用 print 而非 logger
         print(f"[smart_control] 指令: {command}", flush=True)
 
+        segments = split_commands(command)
+        if len(segments) > 1:
+            multi = await self._dispatch_multi(segments)
+            if multi is not None:
+                return multi
+        return await self._dispatch_single(command)
+
+    async def _dispatch_single(self, command: str, *, devices: Optional[list] = None) -> Any:
+        """执行单条指令（多指令拆分后的每一段也走这里）。
+
+        ``devices`` 由多指令路径传入已加载的缓存，避免每段重复读盘或触发刷新。
+        """
         # 归一化（剥"把/请/帮我"前缀）+ 场景短路：场景命令与设备无关，
         # 先短路避免加载设备缓存（缓存缺失时会触发网络刷新）
         norm = normalize_utterance(command)
@@ -1292,7 +1334,10 @@ class MijiaPlugin(NekoPluginBase):
             return await self._execute_scene_by_name(scene_name)
 
         # 意图路由（nlp/ 纯规则引擎）：开关/查询/动作/属性分支短路
-        devices, load_failure = await self._load_devices_cache()
+        if devices is None:
+            devices, load_failure = await self._load_devices_cache()
+        else:
+            load_failure = None
         if load_failure and not devices:
             # 刷新失败 ≠ 账号下没有设备。直接报真实原因，否则 route() 会落到
             # not_found，用户听到的是「设备没匹配上」，掩盖了未登录/网络错。
@@ -1339,6 +1384,98 @@ class MijiaPlugin(NekoPluginBase):
             "  模式：'空调调制冷'\n"
             "  场景：'执行回家场景'"
         ))
+
+    # ── 多指令（一句话控多设备）──────────────────────────────────────────
+
+    async def _dispatch_multi(self, segments: list[str]) -> Any:
+        """逐条执行拆分后的指令并汇总；拆分不成立时返回 None 让调用方回退整句。
+
+        采用拆分的前提是**每一段都能路由到明确目标**。任一段路由不了就整体
+        回退——否则"和风空调"这类设备名被连词切坏后，前半段会当成一条指令
+        去执行，产生原句根本没有的动作。
+        """
+        devices, load_failure = await self._load_devices_cache()
+        if load_failure and not devices:
+            # 让单指令路径去报真实原因（未登录/网络错），不要在这里塌缩成
+            # "拆分失败"这种误导性结论
+            return None
+
+        resolved: list[str] = []
+        shared_verb = ""
+        for segment in segments:
+            text = await self._resolve_segment(segment, shared_verb, devices)
+            if text is None:
+                return None
+            resolved.append(text)
+            verb_m = LEAD_VERB_RE.match(text)
+            if verb_m:
+                shared_verb = verb_m.group(1)
+
+        print(f"[smart_control] 多指令: {resolved}", flush=True)
+        return await self._execute_multi(resolved, devices)
+
+    async def _resolve_segment(self, segment: str, shared_verb: str, devices: list) -> Optional[str]:
+        """判断单独一段能否执行，返回最终要执行的文本（可能补了共享动词）。
+
+        返回 None 表示这段路由不了，调用方据此放弃拆分、整句回退。
+        先按原样试，不行再补前一段的动词——"打开客厅灯和卧室灯"的第二段
+        "卧室灯"本身没有动作，补成"打开卧室灯"才成立。
+        """
+        if await self._segment_routable(segment, devices):
+            return segment
+        candidate = inherit_verb(segment, shared_verb)
+        if candidate != segment and await self._segment_routable(candidate, devices):
+            return candidate
+        return None
+
+    @staticmethod
+    async def _segment_routable(segment: str, devices: list) -> bool:
+        """该段能否路由到明确目标。
+
+        场景与查询放行（查询的匹配在 query_device_state 内部完成，这里判不了）；
+        开关/动作/控制要求设备匹配成功——匹配不上说明这段不是有效指令。
+        """
+        result = await route(normalize_utterance(segment), devices)
+        if result.branch in ("scene", "query"):
+            return True
+        if result.branch == "unknown":
+            return False
+        match = result.match
+        return match is not None and match.status == "ok"
+
+    async def _execute_multi(self, segments: list[str], devices: list) -> Any:
+        """串行执行各段并汇总。
+
+        串行而非并发：米家云端对同一账号的并发下发有限流，且并发时失败归属
+        难定位——多指令场景本来就不追求最低延迟。
+        """
+        results: list[dict] = []
+        for segment in segments:
+            item = _describe_result(segment, await self._dispatch_single(segment, devices=devices))
+            results.append(item)
+        succeeded = sum(1 for r in results if r["success"])
+        failed = len(results) - succeeded
+
+        lines = [f"{len(results)} 条指令：{succeeded} 成功" + (f"，{failed} 失败" if failed else "")]
+        for item in results:
+            if item["success"]:
+                lines.append(f"  ✅ {item['command']}")
+            else:
+                lines.append(f"  ❌ {item['command']}：{item['message']}")
+        message = "\n".join(lines)
+
+        if not failed:
+            return Ok({"success": True, "total": len(results), "results": results, "message": message})
+        # 部分或全部失败都走 Err：Ok 会被 _tool_envelope 翻成 is_error=false，
+        # 模型会以为全部生效。逐条结果放 detail，模型仍能看到哪几条成功。
+        return _err(
+            "multi_control_failed" if succeeded == 0 else "multi_control_partial_failure",
+            message,
+            total=len(results),
+            succeeded=succeeded,
+            failed=failed,
+            results=results,
+        )
 
     async def _execute_action_branch(self, ir: CommandIR) -> Any:
         """执行设备动作分支（开始/暂停/停止/回充等）。
